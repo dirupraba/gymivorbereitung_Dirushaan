@@ -123,16 +123,19 @@ header p { font-size: 12px; opacity: 0.7; }
 </head>
 <body>
 
-<!-- PASSWORD SCREEN -->
+<!-- LOGIN SCREEN -->
 <div id="pw-screen">
   <div class="pw-box">
-    <div class="pw-logo">&#x1F512;</div>
+    <div class="pw-logo">&#x1F4DA;</div>
     <div class="pw-title">Gymivorbereitung</div>
-    <div class="pw-sub">Bitte gib das Passwort ein</div>
-    <input class="pw-input" type="password" id="pw-input" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;" maxlength="30" />
-    <button class="pw-btn" onclick="checkPassword()">Einloggen</button>
+    <div class="pw-sub">Gib deinen Namen und dein Passwort ein</div>
+    <input class="pw-input" type="text" id="pw-name" placeholder="Dein Name" maxlength="30" style="letter-spacing:0;text-align:left;margin-bottom:10px;" />
+    <input class="pw-input" type="password" id="pw-input" placeholder="Passwort" maxlength="30" style="margin-bottom:10px;" />
+    <button class="pw-btn" onclick="checkPassword()">Einloggen &#8594;</button>
     <div class="pw-error" id="pw-error"></div>
-    <div class="pw-hint">Tipp: Frag deine Lehrperson</div>
+    <div class="pw-hint" style="margin-top:16px;line-height:1.6;">
+      Neu hier? Einfach Name und ein eigenes Passwort eingeben<br>und schon wird dein Fortschritt gespeichert!
+    </div>
   </div>
 </div>
 
@@ -141,7 +144,7 @@ header p { font-size: 12px; opacity: 0.7; }
     <h1>Gymivorbereitung Deutsch</h1>
     <p>Alle Themen - adaptiv und interaktiv</p>
   </div>
-  <div class="hbadge" id="total-badge">0 Fragen geloest</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-left:auto;"><span style="font-size:13px;opacity:0.75;">&#x1F464; <span id="user-display"></span></span><div class="hbadge" id="total-badge">0 Fragen geloest</div><button onclick="logout()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;">Abmelden</button></div>
 </header>
 <div class="container">
   <div id="topics-view">
@@ -494,6 +497,7 @@ function answer(idx){
   document.getElementById('feedback').innerHTML=
     '<div class="feedback '+(ok?'ok':'nok')+'">'+(ok?'Richtig! ':'Falsch. ')+q.e+'</div>';
   updateStats();
+  saveProgress();
 }
 
 function showKonfetti(){
@@ -513,30 +517,103 @@ function showKonfetti(){
   setTimeout(function(){wrap.remove();},3000);
 }
 
-var PASSWORT = 'Diru_gymi';
+// =============================================
+// LOGIN & FORTSCHRITT PRO BENUTZER
+// =============================================
+var currentUser = null;
+
+function saveProgress(){
+  if(!currentUser) return;
+  var save = {prog:{}, totalSolved:totalSolved};
+  TOPICS.forEach(function(t){
+    save.prog[t.id]={correct:prog[t.id].correct,total:prog[t.id].total,streak:prog[t.id].streak};
+  });
+  localStorage.setItem('gymiv2_'+currentUser, JSON.stringify(save));
+}
+
+function loadProgress(username){
+  var raw = localStorage.getItem('gymiv2_'+username);
+  if(!raw) return false;
+  try {
+    var save = JSON.parse(raw);
+    totalSolved = save.totalSolved || 0;
+    TOPICS.forEach(function(t){
+      if(save.prog[t.id]){
+        prog[t.id].correct = save.prog[t.id].correct||0;
+        prog[t.id].total   = save.prog[t.id].total||0;
+        prog[t.id].streak  = save.prog[t.id].streak||0;
+      }
+    });
+    return true;
+  } catch(e){ return false; }
+}
 
 function checkPassword(){
-  var inp=document.getElementById('pw-input');
-  var err=document.getElementById('pw-error');
-  if(inp.value===PASSWORT){
-    var s=document.getElementById('pw-screen');
-    s.style.transition='opacity 0.4s';
-    s.style.opacity='0';
-    setTimeout(function(){s.style.display='none';},400);
-  } else {
-    err.textContent='Falsches Passwort. Versuche es nochmal.';
-    inp.classList.remove('shake');
-    void inp.offsetWidth;
-    inp.classList.add('shake');
-    inp.value='';
+  var nameInp = document.getElementById('pw-name');
+  var pwInp   = document.getElementById('pw-input');
+  var err     = document.getElementById('pw-error');
+  var name    = nameInp.value.trim();
+  var pw      = pwInp.value.trim();
+
+  if(name.length < 2){
+    err.textContent = 'Bitte gib deinen Namen ein.';
+    nameInp.classList.remove('shake'); void nameInp.offsetWidth; nameInp.classList.add('shake');
     setTimeout(function(){err.textContent='';},3000);
+    return;
   }
+  if(pw.length < 3){
+    err.textContent = 'Passwort muss mindestens 3 Zeichen haben.';
+    pwInp.classList.remove('shake'); void pwInp.offsetWidth; pwInp.classList.add('shake');
+    setTimeout(function(){err.textContent='';},3000);
+    return;
+  }
+
+  // Check if user exists with different password
+  var storedKey = localStorage.getItem('gymiv2_key_'+name);
+  if(storedKey && storedKey !== pw){
+    err.textContent = 'Falsches Passwort fuer diesen Namen.';
+    pwInp.classList.remove('shake'); void pwInp.offsetWidth; pwInp.classList.add('shake');
+    pwInp.value='';
+    setTimeout(function(){err.textContent='';},3000);
+    return;
+  }
+
+  // Save key if new user
+  localStorage.setItem('gymiv2_key_'+name, pw);
+  currentUser = name;
+
+  var isNew = !loadProgress(name);
+
+  // Update header with username
+  document.getElementById('user-display').textContent = name;
+
+  var s=document.getElementById('pw-screen');
+  s.style.transition='opacity 0.4s';
+  s.style.opacity='0';
+  setTimeout(function(){s.style.display='none';},400);
+
+  renderTopics();
 }
+
 document.getElementById('pw-input').addEventListener('keydown',function(e){
   if(e.key==='Enter') checkPassword();
 });
+document.getElementById('pw-name').addEventListener('keydown',function(e){
+  if(e.key==='Enter') document.getElementById('pw-input').focus();
+});
 
-renderTopics();
+function logout(){
+  if(!confirm('Wirklich abmelden? Dein Fortschritt ist gespeichert.')) return;
+  currentUser=null;
+  TOPICS.forEach(function(t){prog[t.id]={correct:0,total:0,streak:0,used:[]};});
+  totalSolved=0;
+  document.getElementById('pw-name').value='';
+  document.getElementById('pw-input').value='';
+  document.getElementById('pw-error').textContent='';
+  document.getElementById('user-display').textContent='';
+  var s=document.getElementById('pw-screen');
+  s.style.display='flex'; s.style.opacity='1';
+}
 </script>
 </body>
 </html>
