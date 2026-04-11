@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gymivorbereitung Deutsch</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #1D9E75; --green-dark: #0F6E56; --green-light: #E1F5EE;
+  --amber-light: #FEF3DC; --red: #D84040; --red-light: #FDEAEA;
+  --bg: #F7F5F0; --surface: #FFFFFF;
+  --text: #1A1A1A; --muted: #6B6B6B; --border: #E2DDD6;
+  --r: 14px; --rs: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+header {
+  background: var(--green-dark); color: white;
+  padding: 1rem 2rem; display: flex; align-items: center; gap: 12px;
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+}
+header h1 { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; }
+header p { font-size: 12px; opacity: 0.7; }
+.hbadge { margin-left: auto; background: rgba(255,255,255,0.15); padding: 5px 14px; border-radius: 99px; font-size: 13px; white-space: nowrap; }
+.container { max-width: 860px; margin: 0 auto; padding: 2rem 1.2rem; }
+.section-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; margin-bottom: 0.5rem; }
+.subtitle { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; }
+.topic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.topic-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r); padding: 16px; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s; position: relative;
+}
+.topic-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.09); border-color: var(--green); }
+.topic-name { font-size: 13px; font-weight: 600; margin-bottom: 10px; line-height: 1.4; padding-right: 50px; }
+.prog-bg { background: #DDD; border-radius: 99px; height: 5px; margin-bottom: 4px; }
+.prog-fill { background: var(--green); border-radius: 99px; height: 5px; transition: width 0.5s; }
+.prog-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.diff-pill { position: absolute; top: 11px; right: 11px; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+.d1 { background: var(--green-light); color: var(--green-dark); }
+.d2 { background: var(--amber-light); color: #7A4800; }
+.d3 { background: var(--red-light); color: #8B1C1C; }
+#quiz-view { display: none; }
+.quiz-topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.back-btn {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--rs); padding: 8px 16px; font-size: 14px;
+  font-family: 'DM Sans', sans-serif; cursor: pointer; color: var(--text); font-weight: 500;
+}
+.back-btn:hover { background: var(--bg); }
+.quiz-topic-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; }
+.stats-row { display: flex; gap: 10px; margin-bottom: 1.2rem; flex-wrap: wrap; }
+.stat-box { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--rs); padding: 10px 18px; text-align: center; }
+.stat-val { font-size: 22px; font-weight: 600; }
+.stat-label { font-size: 11px; color: var(--muted); }
+.prog-area { margin-bottom: 1.5rem; }
+.prog-area .prog-bg { height: 8px; margin-bottom: 5px; }
+.prog-area .prog-fill { height: 8px; }
+.q-card { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r); padding: 1.5rem; margin-bottom: 1rem; }
+.q-num { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.q-text { font-size: 16px; font-weight: 500; line-height: 1.6; margin-bottom: 1.2rem; }
+.options { display: flex; flex-direction: column; gap: 9px; }
+.opt-btn {
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--rs);
+  padding: 12px 16px; text-align: left; font-size: 14px;
+  font-family: 'DM Sans', sans-serif; color: var(--text); cursor: pointer; font-weight: 500;
+  transition: background 0.12s, border-color 0.12s;
+}
+.opt-btn:hover:not(:disabled) { background: var(--green-light); border-color: var(--green); }
+.opt-btn.correct { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+.opt-btn.wrong { background: var(--red-light); border-color: var(--red); color: #8B1C1C; }
+.opt-btn:disabled { cursor: default; }
+.feedback { border-radius: var(--rs); padding: 12px 16px; font-size: 14px; line-height: 1.6; margin-top: 1rem; font-weight: 500; }
+.feedback.ok { background: var(--green-light); color: var(--green-dark); }
+.feedback.nok { background: var(--red-light); color: #8B1C1C; }
+.gen-btn {
+  background: var(--green); color: white; border: none; border-radius: var(--rs);
+  padding: 12px 28px; font-size: 15px; font-family: 'DM Sans', sans-serif;
+  font-weight: 600; cursor: pointer; transition: background 0.12s;
+}
+.gen-btn:hover { background: var(--green-dark); }
+.streak-badge { background: var(--amber-light); color: #7A4800; padding: 5px 12px; border-radius: 99px; font-size: 13px; font-weight: 600; display: none; }
+.kw { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; overflow: hidden; }
+.k { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: kfall linear forwards; }
+@keyframes kfall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+
+/* PASSWORD SCREEN */
+#pw-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--green-dark);
+  display: flex; align-items: center; justify-content: center;
+}
+.pw-box {
+  background: #fff; border-radius: 20px;
+  padding: 2.5rem 2rem; width: 100%; max-width: 360px;
+  text-align: center; box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+}
+.pw-logo { font-size: 48px; margin-bottom: 1rem; }
+.pw-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.pw-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.5rem; }
+.pw-input {
+  width: 100%; padding: 12px 16px; font-size: 16px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; color: var(--text);
+  outline: none; margin-bottom: 10px; letter-spacing: 3px;
+  text-align: center; transition: border-color 0.15s;
+}
+.pw-input:focus { border-color: var(--green); }
+.pw-input.shake { animation: shake 0.4s; border-color: var(--red); }
+@keyframes shake {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
+}
+.pw-btn {
+  width: 100%; padding: 12px; font-size: 15px; font-weight: 600;
+  background: var(--green); color: white; border: none; border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; cursor: pointer; transition: background 0.15s;
+}
+.pw-btn:hover { background: var(--green-dark); }
+.pw-error { color: var(--red); font-size: 13px; margin-top: 8px; min-height: 18px; }
+.pw-hint { font-size: 11px; color: var(--muted); margin-top: 14px; }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD SCREEN -->
+<div id="pw-screen">
+  <div class="pw-box">
+    <div class="pw-logo">&#x1F512;</div>
+    <div class="pw-title">Gymivorbereitung</div>
+    <div class="pw-sub">Bitte gib das Passwort ein</div>
+    <input class="pw-input" type="password" id="pw-input" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;" maxlength="30" />
+    <button class="pw-btn" onclick="checkPassword()">Einloggen</button>
+    <div class="pw-error" id="pw-error"></div>
+    <div class="pw-hint">Tipp: Frag deine Lehrperson</div>
+  </div>
+</div>
+
+<header>
+  <div>
+    <h1>Gymivorbereitung Deutsch</h1>
+    <p>Alle Themen - adaptiv und interaktiv</p>
+  </div>
+  <div class="hbadge" id="total-badge">0 Fragen geloest</div>
+</header>
+<div class="container">
+  <div id="topics-view">
+    <div class="section-title">Waehle ein Thema</div>
+    <p class="subtitle">Die Schwierigkeit steigt je besser du wirst. Versuche bei jedem Thema 100% zu erreichen!</p>
+    <div class="topic-grid" id="topic-grid"></div>
+  </div>
+  <div id="quiz-view">
+    <div class="quiz-topbar">
+      <button class="back-btn" onclick="goBack()">Zurueck</button>
+      <div class="quiz-topic-title" id="quiz-title"></div>
+      <span class="diff-pill d1" id="diff-pill">Einfach</span>
+      <span class="streak-badge" id="streak-badge"></span>
+    </div>
+    <div class="prog-area">
+      <div class="prog-bg"><div class="prog-fill" id="quiz-prog-fill" style="width:0%"></div></div>
+      <div class="prog-label">
+        <span id="prog-left">0 von 0 richtig</span>
+        <span id="prog-right">0%</span>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="s-correct">0</div><div class="stat-label">Richtig</div></div>
+      <div class="stat-box"><div class="stat-val" id="s-wrong">0</div><div class="stat-label">Falsch</div></div>
+      <div class="stat-box"><div class="stat-val" id="s-streak">0</div><div class="stat-label">Serie</div></div>
+      <div class="stat-box"><div class="stat-val" id="s-pct">0%</div><div class="stat-label">Genauigkeit</div></div>
+    </div>
+    <div class="q-card" id="q-card">
+      <div style="text-align:center;padding:2rem;color:var(--muted);">Druecke "Neue Frage" um zu beginnen!</div>
+    </div>
+    <button class="gen-btn" onclick="nextQuestion()">Neue Frage generieren</button>
+  </div>
+</div>
+<script>
+var TOPICS = [
+  {id:"vier-faelle", name:"Die vier Faelle"},
+  {id:"direkte-rede", name:"Direkte Rede"},
+  {id:"rechtschreibung", name:"Rechtschreibuebungen"},
+  {id:"wortarten", name:"Wortarten bestimmen"},
+  {id:"wortschatz", name:"Wortschatzuebungen"},
+  {id:"zeitformen", name:"Zeitformen"},
+  {id:"fremdwoerter", name:"Fremdwoerter"},
+  {id:"kuckuckseier", name:"Kuckuckseier"},
+  {id:"leseverstehen1", name:"Leseverstehen 1"},
+  {id:"leseverstehen2", name:"Leseverstehen 2"},
+  {id:"praefixe", name:"Vorsilben (Praefixe)"},
+  {id:"redewendungen", name:"Redewendungen"},
+  {id:"adjektivdeklination", name:"Adjektivdeklination"}
+];
+
+var Q = {
+"vier-faelle":[
+  {d:1,q:"Welchen Fall hat 'den Mann' in: 'Der Hund beisst den Mann'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"'Den Mann' ist das direkte Objekt (Wen?) = Akkusativ."},
+  {d:1,q:"In welchem Fall steht 'dem Kind'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"'Dem Kind' steht im Dativ (Wem?)."},
+  {d:1,q:"'Die Katze schlaft.' - Welcher Fall ist 'die Katze'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:0,e:"Das Subjekt steht immer im Nominativ (Wer/Was?)."},
+  {d:1,q:"Welche Frage stellt man fuer den Dativ?",o:["Wer/Was?","Wessen?","Wem?","Wen/Was?"],c:2,e:"Dativ = Wem? (indirektes Objekt)."},
+  {d:1,q:"'Er hilft dem alten Mann.' - Welcher Fall?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"Nach 'helfen' steht immer der Dativ."},
+  {d:1,q:"Welchen Fall verlangen 'durch', 'fuer', 'ohne'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"durch, fuer, gegen, ohne, um verlangen immer den Akkusativ."},
+  {d:1,q:"'Das Buch des Lehrers' - Welcher Fall ist 'des Lehrers'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"Zugehoerigkeit = Genitiv (Wessen?)."},
+  {d:2,q:"'Trotz des Regens gingen wir spazieren.' - Welchen Fall regiert 'trotz'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"trotz, wegen, waehrend, statt verlangen den Genitiv."},
+  {d:2,q:"'Ich denke an meinen Bruder.' - Welchen Fall hat 'meinen Bruder'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"'an' + Akkusativ bei Richtung/Ziel."},
+  {d:2,q:"'Wegen des schlechten Wetters' - Welcher Fall?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"'wegen' regiert den Genitiv."},
+  {d:2,q:"Welchen Fall hat 'sich' in 'Er wascht sich die Haende'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"'sich' ist indirektes Objekt = Dativ."},
+  {d:3,q:"'Ich gehe mit dem Bus in die Stadt.' - Welche Faelle kommen vor?",o:["Nur Dativ","Dativ und Akkusativ","Nominativ, Dativ und Akkusativ","Alle vier Faelle"],c:2,e:"'Ich' = Nominativ, 'dem Bus' = Dativ, 'die Stadt' = Akkusativ."},
+  {d:3,q:"Welche Praepositionen koennen Dativ ODER Akkusativ verlangen?",o:["trotz, wegen","ohne, durch","in, auf, an","mit, von"],c:2,e:"Wechselpraepositionen (in, auf, an, ueber...): Dativ = Wo?, Akkusativ = Wohin?."},
+  {d:3,q:"'Er ist sich sicher.' - In welchem Fall steht 'sich'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"'sicher sein' mit Reflexivpronomen verlangt den Dativ."}
+],
+"direkte-rede":[
+  {d:1,q:"Welches Satzzeichen steht VOR der direkten Rede?",o:["Komma","Semikolon","Doppelpunkt","Punkt"],c:2,e:"Vor direkter Rede steht immer ein Doppelpunkt."},
+  {d:1,q:"Wie lautet die korrekte direkte Rede? Peter sagt er ist muede.",o:["Peter sagt, 'er ist muede.'","Peter sagt: 'Er ist muede.'","Peter sagt: er ist muede.","Peter sagt; 'Er ist muede.'"],c:1,e:"Doppelpunkt vor direkter Rede, Grossschreibung des ersten Buchstabens."},
+  {d:1,q:"Was steht am Ende einer Frage in direkter Rede?",o:["Punkt","Komma","Ausrufezeichen","Fragezeichen"],c:3,e:"Das Fragezeichen steht vor dem schliessenden Anfuehrungszeichen."},
+  {d:1,q:"Was ist richtig an direkter Rede?",o:["Steht nie in Anfuehrungszeichen","Gibt eine Aussage woertlich wieder","Verwendet immer Konjunktiv","Braucht keinen Doppelpunkt"],c:1,e:"Direkte Rede gibt eine Aussage woertlich wieder und steht in Anfuehrungszeichen."},
+  {d:2,q:"Welche Version ist korrekt?",o:["Er sagte: 'ich komme morgen.'","Er sagte: 'Ich komme morgen.'","Er sagte, 'Ich komme morgen.'","Er sagte - 'Ich komme morgen.'"],c:1,e:"Doppelpunkt vor direkter Rede, Grossschreibung."},
+  {d:2,q:"Was ist der Unterschied zwischen direkter und indirekter Rede?",o:["Direkte Rede: woertlich + Anfuehrungszeichen. Indirekte Rede: berichtend + Konjunktiv.","Direkte Rede mit Doppelpunkt, indirekte mit Komma.","Kein Unterschied.","Direkte Rede immer wahr, indirekte erfunden."],c:0,e:"Direkte Rede gibt Worte woertlich wieder. Indirekte Rede berichtet (oft mit Konjunktiv I)."},
+  {d:3,q:"Welche Konjunktivform wird in indirekter Rede bevorzugt?",o:["Konjunktiv I","Konjunktiv II","Indikativ","Imperativ"],c:0,e:"In indirekter Rede wird Konjunktiv I bevorzugt (er sage, er habe)."},
+  {d:3,q:"'Ich mag Schokolade', sagte sie, 'aber nicht zu viel.' - Korrekt?",o:["Ja, korrekt","Nein - kein Komma nach Schokolade","Nein - kein Komma vor aber","Nein - Doppelpunkt statt Komma"],c:0,e:"Korrekt. Bei unterbrochener direkter Rede wird der zweite Teil in Anfuehrungszeichen wieder aufgenommen."}
+],
+"rechtschreibung":[
+  {d:1,q:"Wie schreibt man richtig?",o:["das selbe","dasselbe","dass selbe","das Selbe"],c:1,e:"'dasselbe' wird zusammengeschrieben (Demonstrativpronomen)."},
+  {d:1,q:"'Ich fahre ___ Hause.' Was fehlt?",o:["nach","zu","von","in"],c:0,e:"'nach Hause' = Richtung. 'Zu Hause' = Ort (at home)."},
+  {d:1,q:"Welches ist korrekt?",o:["auf Grund","aufgrund","Auf Grund","Auf grund"],c:1,e:"'aufgrund' wird als Praepositon zusammengeschrieben."},
+  {d:1,q:"'Er ist ___ krank, ___ er nicht kommen kann.' Was passt?",o:["so...das","so...dass","so...dasz","So...Dass"],c:1,e:"'so...dass' ist korrekt (neue Rechtschreibung)."},
+  {d:1,q:"Welche Schreibweise ist richtig?",o:["viel leicht","vielleicht","Vielleicht","viel-leicht"],c:1,e:"'vielleicht' wird immer zusammengeschrieben (Adverb)."},
+  {d:2,q:"Welches Wort ist FALSCH geschrieben?",o:["Rhythmus","Rhytmus","Rhythmen","rhythmisch"],c:1,e:"Korrekt: Rhythmus (mit th und y). 'Rhytmus' ist falsch."},
+  {d:2,q:"'Das/Dass' - Welches passt? 'Ich weiss, ___ du kommst.'",o:["das","dass","Das","Dass"],c:1,e:"'dass' ist eine Konjunktion. Test: kann man es durch 'welches' ersetzen? Nein -> dass."},
+  {d:2,q:"Was wird grossgeschrieben?",o:["schnell laufen","das Laufen","laufend","gelaufen"],c:1,e:"Substantivierte Verben werden grossgeschrieben: das Laufen, das Schreiben."},
+  {d:3,q:"Welches Wort hat die richtige Schreibweise?",o:["Schifffahrt","Schiffahrt","Schifahrt","Schiffsfahrt"],c:0,e:"Neue Rechtschreibung: drei gleiche Konsonanten bleiben: Schiff + Fahrt = Schifffahrt."},
+  {d:3,q:"Welche Form ist korrekt?",o:["Er ass zu viel.","Er az zu viel.","Er aas zu viel.","Er as zu viel."],c:0,e:"'ass' mit Doppel-s. 'zu viel' wird getrennt geschrieben."}
+],
+"wortarten":[
+  {d:1,q:"Welche Wortart ist 'schnell'?",o:["Nomen","Verb","Adjektiv","Adverb"],c:2,e:"'schnell' beschreibt eine Eigenschaft = Adjektiv (steigerbar: schneller, am schnellsten)."},
+  {d:1,q:"'laufen, schreiben, denken' - Welche Wortart?",o:["Nomen","Verben","Adjektive","Pronomen"],c:1,e:"Verben druecken Handlungen, Vorgaenge oder Zustaende aus."},
+  {d:1,q:"Welche Wortart ist 'weil'?",o:["Adverb","Praepositon","Konjunktion","Artikel"],c:2,e:"'weil' ist eine unterordnende Konjunktion - leitet einen Nebensatz ein."},
+  {d:1,q:"'Er' in 'Er geht nach Hause' ist ein...",o:["Nomen","Adjektiv","Pronomen","Verb"],c:2,e:"'Er' ersetzt ein Nomen = Pronomen (Personalpronomen)."},
+  {d:1,q:"Welche Wortart ist 'in'?",o:["Konjunktion","Praepositon","Adverb","Interjektion"],c:1,e:"'in' ist eine Praepositon - steht vor einem Nomen."},
+  {d:2,q:"Welche Wortart ist 'sehr' in 'Er ist sehr muede'?",o:["Adjektiv","Adverb","Konjunktion","Pronomen"],c:1,e:"'sehr' verstaerkt das Adjektiv 'muede' = Gradpartikel / Adverb."},
+  {d:2,q:"Welche Wortart ist 'obwohl'?",o:["Koordinierende Konjunktion","Subordinierende Konjunktion","Adverb","Praepositon"],c:1,e:"'obwohl' leitet einen Nebensatz ein = subordinierende Konjunktion."},
+  {d:2,q:"Was ist ein Possessivpronomen?",o:["Ein Pronomen das ersetzt","Ein Pronomen das Besitz anzeigt","Ein Pronomen das fragt","Ein Pronomen das zeigt"],c:1,e:"Possessivpronomen zeigen Zugehoerigkeit: mein, dein, sein, ihr, unser, euer."},
+  {d:3,q:"Was sind Modalverben?",o:["Hilfsverben die Modus ausdruecken","Verben fuer Bewegung","Verben immer mit Infinitiv","Verben im Passiv"],c:0,e:"Modalverben: koennen, muessen, duerfen, wollen, sollen, moegen."},
+  {d:3,q:"'Er kommt trotzdem.' - Welche Wortart ist 'trotzdem'?",o:["Konjunktion","Adverb","Praepositon","Adjektiv"],c:1,e:"'trotzdem' ist ein Konjunktionaladverb - leitet keinen Nebensatz ein."}
+],
+"wortschatz":[
+  {d:1,q:"Was bedeutet 'melancholisch'?",o:["froehlich","schwermuetig und traurig","aufgeregt","gelassen"],c:1,e:"Melancholisch = schwermuetig, von tiefer Traurigkeit gepraegt."},
+  {d:1,q:"Was bedeutet 'eloquent'?",o:["schweigsam","redegewandt","laut","unhoeflich"],c:1,e:"Eloquent = redegewandt, sich gut ausdruecken koennen."},
+  {d:1,q:"Was ist ein Synonym fuer 'beginnen'?",o:["enden","starten","stoppen","wiederholen"],c:1,e:"Synonyme: starten, anfangen, anbrechen, loslegen."},
+  {d:1,q:"Was bedeutet 'praezise'?",o:["ungenau","genau und exakt","langsam","kreativ"],c:1,e:"Praezise = exakt, genau, auf den Punkt gebracht."},
+  {d:2,q:"Was ist das Gegenteil von 'erheblich'?",o:["betraechtlich","bedeutend","geringfuegig","immens"],c:2,e:"'geringfuegig' ist das Antonym zu 'erheblich'."},
+  {d:2,q:"Was bedeutet 'ambivalent'?",o:["eindeutig","zwiespaetig / widerspruchsvoll","freundlich","entschieden"],c:1,e:"Ambivalent = zwiespaetig, widerspruchsvolle Gefuehle gleichzeitig habend."},
+  {d:2,q:"Was bedeutet 'konsekutiv'?",o:["gleichzeitig","aufeinanderfolgend","gegensaetzlich","zufaellig"],c:1,e:"Konsekutiv = aufeinanderfolgend, in Folge."},
+  {d:3,q:"Welches Wort passt NICHT zur Gruppe? suffisant / haemisch / mokant / aufrichtig",o:["suffisant","haemisch","mokant","aufrichtig"],c:3,e:"suffisant, haemisch, mokant = spoettisch. 'aufrichtig' ist das Gegenteil."},
+  {d:3,q:"Was bedeutet 'lapidar'?",o:["ausfuehrlich","kurz und praegnant formuliert","mehrdeutig","feierlich"],c:1,e:"Lapidar = knapp und treffend formuliert, ohne viele Worte."},
+  {d:3,q:"Was bedeutet 'solitaer'?",o:["gesellig","allein/einzeln","farbig","freundlich"],c:1,e:"Solitaer = allein, einzeln, fuer sich stehend."}
+],
+"zeitformen":[
+  {d:1,q:"'Ich spielte gestern Fussball.' - Welche Zeitform?",o:["Praesens","Praeteritum","Perfekt","Plusquamperfekt"],c:1,e:"Praeteritum = einfache Vergangenheit."},
+  {d:1,q:"'Er hat gegessen.' - Welche Zeitform?",o:["Praesens","Praeteritum","Perfekt","Futur I"],c:2,e:"Perfekt = haben/sein + Partizip II."},
+  {d:1,q:"'Sie wird kommen.' - Welche Zeitform?",o:["Praesens","Futur I","Futur II","Konjunktiv"],c:1,e:"Futur I = werden + Infinitiv. Drueckt Zukunftiges aus."},
+  {d:1,q:"Was ist die Grundform des Verbs?",o:["Partizip","Infinitiv","Imperativ","Konjunktiv"],c:1,e:"Der Infinitiv ist die Grundform (laufen, schreiben, denken)."},
+  {d:2,q:"'Als ich ankam, hatte er schon gegessen.' - 'hatte gegessen' ist?",o:["Perfekt","Praeteritum","Plusquamperfekt","Futur II"],c:2,e:"Plusquamperfekt = Vorvergangenheit. Was VOR einem anderen vergangenen Ereignis geschah."},
+  {d:2,q:"Welche Zeitform wird in Romanen und Berichten bevorzugt?",o:["Perfekt","Praeteritum","Futur I","Plusquamperfekt"],c:1,e:"Das Praeteritum ist die typische Erzaehlzeit in der Schriftsprache."},
+  {d:2,q:"'Er wird gegessen haben.' - Welche Zeitform?",o:["Futur I","Futur II","Perfekt","Plusquamperfekt"],c:1,e:"Futur II = werden + Partizip II + haben/sein. In Zukunft abgeschlossene Handlung."},
+  {d:3,q:"'Waere er frueher gekommen, haette er sie angetroffen' - Welche Form?",o:["Plusquamperfekt","Konjunktiv II Plusquamperfekt","Futur II","Konjunktiv I Perfekt"],c:1,e:"Irreale Bedingungssaetze in der Vergangenheit: Konjunktiv II des Plusquamperfekts."},
+  {d:3,q:"'Er sagt, er komme morgen.' - 'komme' ist welche Form?",o:["Indikativ Praesens","Konjunktiv I Praesens","Konjunktiv II Praesens","Imperativ"],c:1,e:"In indirekter Rede wird Konjunktiv I verwendet: er komme, er habe, er sei."}
+],
+"fremdwoerter":[
+  {d:1,q:"Was bedeutet 'global'?",o:["lokal","weltweit","einmalig","zeitlich"],c:1,e:"Global (lat. globus = Kugel) = weltweit, die ganze Erde betreffend."},
+  {d:1,q:"Was bedeutet 'flexibel'?",o:["starr","anpassungsfaehig","schwach","organisiert"],c:1,e:"Flexibel (lat. flectere = biegen) = biegsam, anpassungsfaehig."},
+  {d:1,q:"Was bedeutet 'komplex'?",o:["einfach","vielschichtig/kompliziert","schnell","teuer"],c:1,e:"Komplex = aus vielen Teilen bestehend, vielschichtig."},
+  {d:2,q:"Was bedeutet 'kontrar'?",o:["aehnlich","entgegengesetzt","parallel","ergaenzend"],c:1,e:"Kontrar = entgegengesetzt, gegensaetzlich."},
+  {d:2,q:"Was ist ein 'Protagonist'?",o:["Gegenspieler","Hauptfigur","Erzaehler","Nebenfigur"],c:1,e:"Protagonist (gr. protos = erster) = Hauptfigur."},
+  {d:2,q:"Was bedeutet 'Synonym'?",o:["Gegenteil","bedeutungsgleiches Wort","Fremdwort","zusammengesetztes Wort"],c:1,e:"Synonym = ein Wort mit gleicher oder aehnlicher Bedeutung."},
+  {d:3,q:"Was bedeutet 'tautologisch'?",o:["widerspruchsvoll","dasselbe mit anderen Worten sagen","bedeutungslos","fremdsprachig"],c:1,e:"Tautologisch = eine Aussage die sich selbst wiederholt (z.B. 'weisser Schimmel')."},
+  {d:3,q:"Was ist ein Pleonasmus?",o:["Verwendung von Fremdwoertern","sinnlose Verdopplung von Bedeutung","Stilmittel der Ironie","grammatischer Fehler"],c:1,e:"Pleonasmus = bedeutungsgleiche Verdopplung: 'alter Greis', 'weisser Schimmel'."},
+  {d:3,q:"Was bedeutet 'solitaer'?",o:["gesellig","allein/einzeln","farbig","freundlich"],c:1,e:"Solitaer = allein, einzeln."}
+],
+"kuckuckseier":[
+  {d:1,q:"Welches Wort passt NICHT? Apfel / Birne / Karotte / Pflaume",o:["Apfel","Birne","Karotte","Pflaume"],c:2,e:"Karotte ist Gemuese, alle anderen sind Fruechte."},
+  {d:1,q:"Welches Wort passt NICHT? Rot / Blau / Gruen / Hoch",o:["Rot","Blau","Gruen","Hoch"],c:3,e:"'Hoch' ist keine Farbe, sondern ein Adjektiv fuer Hoehe."},
+  {d:1,q:"Welches Wort passt NICHT? Hamburg / Muenchen / Zuerich / Berlin",o:["Hamburg","Muenchen","Zuerich","Berlin"],c:2,e:"Zuerich ist in der Schweiz. Die anderen drei sind deutsche Staedte."},
+  {d:2,q:"Welches Wort passt NICHT? singen / tanzen / pfeifen / lauschen",o:["singen","tanzen","pfeifen","lauschen"],c:3,e:"Singen, tanzen, pfeifen erzeugen Geraeusche. 'Lauschen' ist passives Hoeren."},
+  {d:2,q:"Welches Wort gehoert NICHT zur Wortfamilie? schreiben / Schrift / Schreiber / schreiend",o:["schreiben","Schrift","Schreiber","schreiend"],c:3,e:"'schreiend' gehoert zur Familie von 'schreien', nicht von 'schreiben'."},
+  {d:2,q:"Welches Wort ist KEIN Adjektiv? klug / Mut / froh / laut",o:["klug","Mut","froh","laut"],c:1,e:"'Mut' ist ein Nomen. Klug, froh und laut sind Adjektive."},
+  {d:3,q:"Welches Wort passt NICHT? Euphorie / Melancholie / Nostalgie / Geografie",o:["Euphorie","Melancholie","Nostalgie","Geografie"],c:3,e:"Euphorie, Melancholie und Nostalgie sind Gefuehlszustaende. Geografie ist eine Wissenschaft."},
+  {d:3,q:"Welches passt NICHT zum Stilmittel? Metapher / Vergleich / Allegorie / Konjunktion",o:["Metapher","Vergleich","Allegorie","Konjunktion"],c:3,e:"Metapher, Vergleich und Allegorie sind Stilmittel. Konjunktion ist eine Wortart."}
+],
+"leseverstehen1":[
+  {d:1,
+   text:"Die Biene ist eines der wichtigsten Tiere fuer den Menschen. Sie bestaubt Blumen und Obstbaeume, ohne die es kaum Fruechte und Gemuese gaebe. Eine einzige Bienenkoenigin kann bis zu 2000 Eier pro Tag legen. Arbeiterinnen sammeln Nektar und verwandeln ihn in Honig. Im Winter leben die Bienen von ihrem Honigvorrat und verlassen den Stock kaum.",
+   q:"Was ist die Hauptaufgabe der Arbeitsbienen gemaess dem Text?",
+   o:["Eier legen","Nektar sammeln und zu Honig verarbeiten","Den Stock bewachen","Die Koenigin futtern"],
+   c:1,e:"Im Text steht: Arbeiterinnen sammeln Nektar und verwandeln ihn in Honig."},
+  {d:1,
+   text:"Die Biene ist eines der wichtigsten Tiere fuer den Menschen. Sie bestaubt Blumen und Obstbaeume, ohne die es kaum Fruechte und Gemuese gaebe. Eine einzige Bienenkoenigin kann bis zu 2000 Eier pro Tag legen. Arbeiterinnen sammeln Nektar und verwandeln ihn in Honig. Im Winter leben die Bienen von ihrem Honigvorrat und verlassen den Stock kaum.",
+   q:"Was wuerde laut Text passieren, wenn es keine Bienen gaebe?",
+   o:["Es gaebe weniger Honig","Es gaebe kaum Fruechte und Gemuese","Es gaebe mehr Blumen","Die Obstbaeume wuerden schneller wachsen"],
+   c:1,e:"Der Text sagt: ohne Bienen gaebe es kaum Fruechte und Gemuese, weil Bienen die Pflanzen bestauben."},
+  {d:1,
+   text:"Max liebt es, fruehmorgens aufzustehen. Waehrend seine Familie noch schlaeft, setzt er sich an den Kuechentisch und liest. Er findet die Stille am Morgen besonders angenehm. Sein Lieblingsbuch handelt von einem Jungen, der auf einer Insel ueberleben muss. Oft ist Max so vertieft, dass er das Fruehstueck vergisst.",
+   q:"Warum steht Max fruehmorgens auf?",
+   o:["Um zu fruehstuecken","Um seiner Familie zu helfen","Um in Ruhe zu lesen","Um Sport zu machen"],
+   c:2,e:"Max steht frueh auf, weil er die Stille am Morgen mag und dann ungestoert lesen kann."},
+  {d:2,
+   text:"Seit einigen Jahren nimmt die Zahl der Elektroautos stark zu. Viele Menschen entscheiden sich fuer diese Fahrzeuge, weil sie umweltfreundlicher sind als Benzin- oder Dieselautos. Allerdings gibt es noch Herausforderungen: Die Reichweite ist begrenzt, und es fehlt an Ladestationen. Experten sind jedoch zuversichtlich, dass diese Probleme in den naechsten Jahren geloest werden.",
+   q:"Was ist laut Text ein Problem bei Elektroautos?",
+   o:["Sie sind zu teuer","Die Reichweite ist begrenzt und es fehlen Ladestationen","Sie sind lauter als normale Autos","Sie brauchen viel Oel"],
+   c:1,e:"Der Text nennt explizit: begrenzte Reichweite und fehlende Ladestationen als Herausforderungen."},
+  {d:2,
+   text:"Seit einigen Jahren nimmt die Zahl der Elektroautos stark zu. Viele Menschen entscheiden sich fuer diese Fahrzeuge, weil sie umweltfreundlicher sind als Benzin- oder Dieselautos. Allerdings gibt es noch Herausforderungen: Die Reichweite ist begrenzt, und es fehlt an Ladestationen. Experten sind jedoch zuversichtlich, dass diese Probleme in den naechsten Jahren geloest werden.",
+   q:"Welche Einstellung haben Experten laut Text gegenueber der Zukunft der Elektroautos?",
+   o:["Pessimistisch - sie glauben die Probleme bleiben","Neutral - sie sagen nichts dazu","Zuversichtlich - sie glauben die Probleme werden geloest","Skeptisch - sie raten davon ab"],
+   c:2,e:"Der Text sagt ausdruecklich: Experten sind zuversichtlich, dass die Probleme geloest werden."},
+  {d:3,
+   text:"Als Clara das erste Mal die Bibliothek betrat, wusste sie sofort: Hier gehoert sie hin. Der Geruch von alten Buechern, das leise Rauschen der Heizung, die hohen Holzregale - all das fuellte sie mit einer Ruhe, die sie sonst kaum kannte. Zu Hause war es immer laut, ihre drei Geschwister stritten sich staendig. Hier konnte sie endlich denken.",
+   q:"Warum gefaellt es Clara in der Bibliothek so gut? (Indirekte Information)",
+   o:["Weil sie dort Freunde trifft","Weil es zu Hause unruhig ist und sie hier Stille findet","Weil die Buecher kostenlos sind","Weil ihre Lehrerin sie hingeschickt hat"],
+   c:1,e:"Clara liebt die Bibliothek vor allem weil sie zu Hause (drei streitende Geschwister, immer laut) keine Ruhe findet. Diese Schlussfolgerung muss man aus dem Text erschliessen."},
+  {d:3,
+   text:"Als Clara das erste Mal die Bibliothek betrat, wusste sie sofort: Hier gehoert sie hin. Der Geruch von alten Buechern, das leise Rauschen der Heizung, die hohen Holzregale - all das fuellte sie mit einer Ruhe, die sie sonst kaum kannte. Zu Hause war es immer laut, ihre drei Geschwister stritten sich staendig. Hier konnte sie endlich denken.",
+   q:"Was sagt der Text ueber Claras Zuhause?",
+   o:["Es ist gross und komfortabel","Es ist laut wegen ihrer Geschwister","Es ist weit von der Bibliothek entfernt","Es ist ruhig und ordentlich"],
+   c:1,e:"Der Text erwaehnt direkt: 'Zu Hause war es immer laut, ihre drei Geschwister stritten sich staendig.'"}
+],
+"leseverstehen2":[
+  {d:1,
+   text:"Der Schwarzwald ist eine der bekanntesten Regionen Deutschlands. Er liegt im Suedwesten des Landes, in Baden-Wuerttemberg. Typisch fuer den Schwarzwald sind seine dichten Nadelwaelder, tiefen Taeler und malerischen Doefer. Bekannt ist die Region auch fuer Kuckucksuhren, Kirschtorte und den Bollenhut. Jedes Jahr kommen Millionen von Touristen, um die Natur zu geniessen.",
+   q:"Wo liegt der Schwarzwald?",
+   o:["In Bayern","In Baden-Wuerttemberg","In der Schweiz","In Oesterreich"],
+   c:1,e:"Der Text nennt den Standort direkt: 'Er liegt im Suedwesten des Landes, in Baden-Wuerttemberg.'"},
+  {d:1,
+   text:"Der Schwarzwald ist eine der bekanntesten Regionen Deutschlands. Er liegt im Suedwesten des Landes, in Baden-Wuerttemberg. Typisch fuer den Schwarzwald sind seine dichten Nadelwaelder, tiefen Taeler und malerischen Doefer. Bekannt ist die Region auch fuer Kuckucksuhren, Kirschtorte und den Bollenhut. Jedes Jahr kommen Millionen von Touristen, um die Natur zu geniessen.",
+   q:"Was ist NICHT als typisch fuer den Schwarzwald im Text erwaehnt?",
+   o:["Kuckucksuhren","Kirschtorte","Alpenpanorama","Nadelwaelder"],
+   c:2,e:"Alpenpanorama wird im Text nicht erwaehnt. Genannt werden: Nadelwaelder, Taeler, Doefer, Kuckucksuhren, Kirschtorte und Bollenhut."},
+  {d:2,
+   text:"Lina hatte sich das anders vorgestellt. Als sie die Pruefung in der Hand hielt, sah sie sofort die rote Zahl oben rechts: 3.8. Nicht bestanden. Sie schluckte. Dabei hatte sie so viel gelernt, naetelang bis Mitternacht. Was hatte sie falsch gemacht? Vielleicht hatte sie die falschen Themen geuebt. Oder sie war einfach zu nervoes gewesen. Sie faltete das Blatt und steckte es in die Tasche. Beim naechsten Mal wuerde es besser laufen.",
+   q:"Wie reagiert Lina auf das Ergebnis?",
+   o:["Sie ist wuetend und wirft das Blatt weg","Sie ist entaeuscht, aber entschlossen es besser zu machen","Sie ist ueberrascht weil sie nicht gelernt hatte","Sie ist gleichgueltig"],
+   c:1,e:"Lina ist entaeuscht (schluckt, hatte viel gelernt), denkt nach was falsch lief, und sagt sich beim naechsten Mal wird es besser - also entschlossen."},
+  {d:2,
+   text:"Lina hatte sich das anders vorgestellt. Als sie die Pruefung in der Hand hielt, sah sie sofort die rote Zahl oben rechts: 3.8. Nicht bestanden. Sie schluckte. Dabei hatte sie so viel gelernt, naetelang bis Mitternacht. Was hatte sie falsch gemacht? Vielleicht hatte sie die falschen Themen geuebt. Oder sie war einfach zu nervoes gewesen. Sie faltete das Blatt und steckte es in die Tasche. Beim naechsten Mal wuerde es besser laufen.",
+   q:"Was sind Linas moegliche Erklaerungen fuer das schlechte Ergebnis laut Text?",
+   o:["Sie hatte zu wenig gelernt","Falsche Themen geuebt oder zu nervoes gewesen","Die Pruefung war unfair","Sie hatte das falsche Buch benutzt"],
+   c:1,e:"Der Text nennt zwei Moeglichkeiten: 'Vielleicht hatte sie die falschen Themen geuebt. Oder sie war einfach zu nervoes gewesen.'"},
+  {d:3,
+   text:"Technologie veraendert unsere Art zu kommunizieren grundlegend. Frueherer schrieben Menschen Briefe, die Tage oder Wochen brauchten. Heute antwortet man in Sekunden per Nachricht. Doch viele Forscher warnen: Obwohl wir mehr kommunizieren als je zuvor, fuehlen sich viele Menschen einsamer. Die staendige Erreichbarkeit fuehrt nicht automatisch zu tieferen Beziehungen. Qualitaet, nicht Quantitaet, entscheidet ueber echte Verbundenheit.",
+   q:"Was ist die Hauptthese dieses Textes?",
+   o:["Technologie ist schlecht fuer die Gesellschaft","Mehr Kommunikation fuehrt nicht zwangslaeu=flig zu besseren Beziehungen","Briefe sind besser als Nachrichten","Forscher sind gegen Smartphones"],
+   c:1,e:"Die Hauptthese steht am Ende: Quantitaet allein bringt keine echte Verbundenheit. Mehr Kommunikation = nicht automatisch tiefere Beziehungen."},
+  {d:3,
+   text:"Technologie veraendert unsere Art zu kommunizieren grundlegend. Frueherer schrieben Menschen Briefe, die Tage oder Wochen brauchten. Heute antwortet man in Sekunden per Nachricht. Doch viele Forscher warnen: Obwohl wir mehr kommunizieren als je zuvor, fuehlen sich viele Menschen einsamer. Die staendige Erreichbarkeit fuehrt nicht automatisch zu tieferen Beziehungen. Qualitaet, nicht Quantitaet, entscheidet ueber echte Verbundenheit.",
+   q:"Welches Stilmittel benutzt der letzte Satz? 'Qualitaet, nicht Quantitaet, entscheidet ueber echte Verbundenheit.'",
+   o:["Eine Metapher","Einen Vergleich mit 'wie'","Eine Antithese (Gegensatz)","Eine Aufzaehlung"],
+   c:2,e:"Der Satz stellt Qualitaet und Quantitaet als Gegensatz gegenueber = Antithese. Dies ist eine rhetorische Figur."}
+],
+"praefixe":[
+  {d:1,q:"Was bedeutet das Praefx 'un-'?",o:["sehr","nicht / Gegenteil","wieder","vor"],c:1,e:"un- = Verneinung/Gegenteil: ungluecklich, unmoeglich, unbekannt."},
+  {d:1,q:"Was bedeutet 'vor-' in 'vorhersagen'?",o:["nach","zeitlich davor","gegen","zusammen"],c:1,e:"vor- = zeitlich oder raeumlich davor: vorbereiten, vorhersagen."},
+  {d:1,q:"Was bedeutet das Praefx 'miss-'?",o:["wieder","falsch / schlecht","sehr","zusammen"],c:1,e:"miss- = falsch, negativ: misslingen, missverstehen, missachten."},
+  {d:2,q:"Welches Praefx bedeutet 'zurueck' oder 'wieder'?",o:["ver-","zer-","re- / rueck-","ent-"],c:2,e:"re- oder rueck- = zurueck/wieder: Rueckgabe, Rueckkehr, reorganisieren."},
+  {d:2,q:"Was bewirkt das Praefx 'zer-' meist?",o:["Steigerung","Trennung / Zerstoerung","Wiederholung","Verneinung"],c:1,e:"zer- = Zertrennung, Zerstoerung: zerbrechen, zerrissen, zerstoeren."},
+  {d:3,q:"Das Praefx 'ent-' kann welche Bedeutungen haben?",o:["Nur Beginn","Entfernung, Befreiung oder Beginn","Nur Verneinung","Nur Steigerung"],c:1,e:"ent- hat drei Bedeutungen: 1. Entfernung, 2. Beginn, 3. Befreiung."},
+  {d:3,q:"Welches Wort mit Praefx ist FALSCH gebildet?",o:["vorschlagen","unmoeglich","misslingen","zuruckfaren"],c:3,e:"'zuruckfaren' ist falsch - korrekt: 'zurueckfahren'."}
+],
+"redewendungen":[
+  {d:1,q:"Was bedeutet 'den Nagel auf den Kopf treffen'?",o:["Einen Fehler machen","Genau das Richtige sagen","Jemanden verletzen","Pech haben"],c:1,e:"'Den Nagel auf den Kopf treffen' = etwas genau richtig formulieren."},
+  {d:1,q:"Was bedeutet 'ins kalte Wasser springen'?",o:["Schwimmen gehen","Etwas ohne Vorbereitung angehen","Jemanden ueberraschen","Einen Fehler machen"],c:1,e:"'Ins kalte Wasser springen' = etwas ohne Vorbereitung direkt angehen."},
+  {d:1,q:"Was bedeutet 'auf dem Holzweg sein'?",o:["Im Wald sein","Sich irren","Langsam vorankommen","Erfolgreich sein"],c:1,e:"'Auf dem Holzweg sein' = sich taueschen, falsch liegen."},
+  {d:2,q:"Was bedeutet 'jemandem auf den Zahn fuehlen'?",o:["Zum Zahnarzt gehen","Jemanden pruefen / ausfragen","Jemanden troesten","Jemanden taueschen"],c:1,e:"'Jemandem auf den Zahn fuehlen' = jemanden genau befragen."},
+  {d:2,q:"Was bedeutet 'das Handtuch werfen'?",o:["Aufraeumen","Aufgeben","Beginnen","Siegen"],c:1,e:"'Das Handtuch werfen' = aufgeben, kapitulieren (aus dem Boxsport)."},
+  {d:2,q:"Was bedeutet 'unter vier Augen'?",o:["Mit vier Personen","Unter Beobachtung","Im Geheimen / nur zu zweit","Vor einem Spiegel"],c:2,e:"'Unter vier Augen' = nur zu zweit, vertraulich, ohne Zuschauer."},
+  {d:3,q:"Was bedeutet 'jemandem den Zahn ziehen'?",o:["Zum Zahnarzt schicken","Jemandem eine Illusion nehmen","Jemandem wehtun","Jemanden ueberreden"],c:1,e:"'Jemandem den Zahn ziehen' = jemandem eine falsche Hoffnung nehmen."},
+  {d:3,q:"Was bedeutet 'auf grossem Fuss leben'?",o:["Grosse Schuhe tragen","Verschwenderisch / luxurioes leben","Viel spazieren","Reich werden"],c:1,e:"'Auf grossem Fuss leben' = luxurioes und verschwenderisch ueber seine Verhaeltnisse."},
+  {d:3,q:"Was bedeutet 'eine Extrawurst braten'?",o:["Kochen","Jemanden bevorzugen / besonders behandeln","Feiern","Luegen"],c:1,e:"'Eine Extrawurst braten' = jemanden besonders behandeln, Sonderwuensche erfuellen."}
+],
+"adjektivdeklination":[
+  {d:1,q:"'Ein ___ Mann' (jung, Nominativ) - Welche Endung?",o:["junge","junger","jungen","jungem"],c:1,e:"Nach unbestimmtem Artikel im Nominativ Maskulin: -er (ein junger Mann)."},
+  {d:1,q:"'Das ___ Kind' (klein, Nominativ) - Welche Endung?",o:["kleines","kleiner","kleine","kleinem"],c:2,e:"Nach bestimmtem Artikel im Nominativ Neutrum: -e (das kleine Kind)."},
+  {d:1,q:"'Die ___ Frau' (alt, Akkusativ) - Welche Endung?",o:["alten","alte","alter","altem"],c:1,e:"Nach bestimmtem Artikel im Akkusativ Feminin: -e (die alte Frau)."},
+  {d:2,q:"'___ Wasser' (kalt, ohne Artikel, Nominativ) - Welche Endung?",o:["kalte","kaltem","kaltes","kalter"],c:2,e:"Ohne Artikel im Nominativ Neutrum: starke Deklination = -es (kaltes Wasser)."},
+  {d:2,q:"'Mit dem ___ Auto' (neu, Dativ) - Welche Endung?",o:["neue","neues","neuen","neuem"],c:2,e:"Nach bestimmtem Artikel im Dativ Neutrum: -en (mit dem neuen Auto)."},
+  {d:2,q:"'Einem ___ Mann helfen' (alt, Dativ) - Welche Endung?",o:["alten","alte","alter","altem"],c:0,e:"Nach unbestimmtem Artikel im Dativ Maskulin: -en (einem alten Mann)."},
+  {d:3,q:"'___ Maedchen' (huebsch, Nominativ, ohne Artikel) - Welche Endung?",o:["huebsches","huebsche","huebscher","huebschem"],c:0,e:"Ohne Artikel, Nominativ Neutrum: starke Deklination = -es (huebsches Maedchen)."},
+  {d:3,q:"Welche Aussage zur Adjektivdeklination ist korrekt?",o:["Nach Nullartikel immer schwache Endung","Nach bestimmtem Artikel schwache Endung","Nach unbestimmtem Artikel immer -en","Adjektive werden nie dekliniert"],c:1,e:"Nach bestimmtem Artikel: schwache Deklination (-e oder -en). Nach Nullartikel: starke Deklination."},
+  {d:3,q:"'Die Kosten des ___ Umbaus' (teuer, Genitiv) - Welche Endung?",o:["teueren","teuren","teures","teurem"],c:1,e:"Nach bestimmtem Artikel im Genitiv: -en (des teuren Umbaus). Achtung: Synkope teur-."}
+]
+};
+
+var prog = {};
+TOPICS.forEach(function(t){ prog[t.id]={correct:0,total:0,streak:0,used:[]}; });
+var activeTopic=null, currentQ=null, answered=false, totalSolved=0;
+
+function getPct(id){ var p=prog[id]; if(!p.total)return 0; return Math.round(p.correct/p.total*100); }
+function getDiff(id){ var p=getPct(id); return p<40?1:p<70?2:3; }
+function getDiffLabel(d){ return ["Einfach","Mittel","Schwer"][d-1]; }
+function getDiffClass(d){ return ["d1","d2","d3"][d-1]; }
+
+function pickQuestion(id){
+  var p=prog[id], pool=Q[id]||[], diff=getDiff(id);
+  var cands=pool.filter(function(q){return q.d===diff;});
+  if(!cands.length) cands=pool;
+  var fresh=cands.filter(function(q){return p.used.indexOf(pool.indexOf(q))===-1;});
+  if(!fresh.length){p.used=[];fresh=cands;}
+  var q=fresh[Math.floor(Math.random()*fresh.length)];
+  p.used.push(pool.indexOf(q));
+  if(p.used.length>Math.floor(pool.length*0.6)) p.used.shift();
+  return q;
+}
+
+function renderTopics(){
+  document.getElementById('topics-view').style.display='block';
+  document.getElementById('quiz-view').style.display='none';
+  var html='';
+  TOPICS.forEach(function(t){
+    var p=prog[t.id], pct=getPct(t.id), d=getDiff(t.id);
+    html+='<div class="topic-card" onclick="openTopic(\''+t.id+'\')">' +
+      '<span class="diff-pill '+getDiffClass(d)+'">'+getDiffLabel(d)+'</span>' +
+      '<div class="topic-name">'+t.name+'</div>' +
+      '<div class="prog-bg"><div class="prog-fill" style="width:'+pct+'%"></div></div>' +
+      '<div class="prog-label"><span>'+p.correct+'/'+p.total+' richtig</span><span>'+pct+'%</span></div>' +
+      '</div>';
+  });
+  document.getElementById('topic-grid').innerHTML=html;
+  document.getElementById('total-badge').textContent=totalSolved+' Fragen geloest';
+}
+
+function openTopic(id){
+  activeTopic=id; answered=false; currentQ=null;
+  document.getElementById('topics-view').style.display='none';
+  document.getElementById('quiz-view').style.display='block';
+  var t=TOPICS.filter(function(x){return x.id===id;})[0];
+  document.getElementById('quiz-title').textContent=t.name;
+  updateStats();
+  document.getElementById('q-card').innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);">Druecke Neue Frage um zu beginnen!</div>';
+}
+
+function goBack(){ activeTopic=null; currentQ=null; renderTopics(); }
+
+function updateStats(){
+  var p=prog[activeTopic], pct=getPct(activeTopic), d=getDiff(activeTopic);
+  document.getElementById('s-correct').textContent=p.correct;
+  document.getElementById('s-wrong').textContent=p.total-p.correct;
+  document.getElementById('s-streak').textContent=p.streak;
+  document.getElementById('s-pct').textContent=pct+'%';
+  document.getElementById('quiz-prog-fill').style.width=pct+'%';
+  document.getElementById('prog-left').textContent=p.correct+' von '+p.total+' richtig';
+  document.getElementById('prog-right').textContent=pct+'%';
+  var dp=document.getElementById('diff-pill');
+  dp.textContent=getDiffLabel(d); dp.className='diff-pill '+getDiffClass(d);
+  var sb=document.getElementById('streak-badge');
+  if(p.streak>=3){sb.style.display='inline-block';sb.textContent=p.streak+' in Serie!';}
+  else sb.style.display='none';
+}
+
+function nextQuestion(){
+  if(!activeTopic) return;
+  currentQ=pickQuestion(activeTopic); answered=false;
+  var q=currentQ;
+  var ohtml=q.o.map(function(opt,i){
+    return '<button class="opt-btn" onclick="answer('+i+')">'+opt+'</button>';
+  }).join('');
+  var stars='';for(var i=0;i<q.d;i++) stars+='&#9733;';
+  var textBlock='';
+  if(q.text){
+    textBlock='<div style="background:#F0FAF5;border-left:4px solid #1D9E75;border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:16px;font-size:14px;line-height:1.75;color:#1A1A1A;">'+
+      '<div style="font-size:11px;font-weight:600;color:#0F6E56;margin-bottom:8px;letter-spacing:0.5px;">LESETEXT</div>'+
+      q.text+'</div>';
+  }
+  document.getElementById('q-card').innerHTML=
+    '<div class="q-num">Schwierigkeit: '+stars+'</div>'+
+    textBlock+
+    '<div class="q-text">'+q.q+'</div>'+
+    '<div class="options">'+ohtml+'</div>'+
+    '<div id="feedback"></div>';
+}
+
+function answer(idx){
+  if(answered||!currentQ) return;
+  answered=true;
+  var q=currentQ, p=prog[activeTopic];
+  p.total++; totalSolved++;
+  var ok=(idx===q.c);
+  var btns=document.querySelectorAll('.opt-btn');
+  for(var i=0;i<btns.length;i++){
+    btns[i].disabled=true;
+    if(i===q.c) btns[i].classList.add('correct');
+    else if(i===idx&&!ok) btns[i].classList.add('wrong');
+  }
+  if(ok){p.correct++;p.streak++;if(p.streak%5===0) showKonfetti();}
+  else p.streak=0;
+  document.getElementById('feedback').innerHTML=
+    '<div class="feedback '+(ok?'ok':'nok')+'">'+(ok?'Richtig! ':'Falsch. ')+q.e+'</div>';
+  updateStats();
+}
+
+function showKonfetti(){
+  var colors=['#1D9E75','#E8A020','#D84040','#5DCAA5','#F0C040','#60A0E0'];
+  var wrap=document.createElement('div'); wrap.className='kw';
+  for(var i=0;i<60;i++){
+    var k=document.createElement('div'); k.className='k';
+    var c=colors[Math.floor(Math.random()*colors.length)];
+    var dur=(1.2+Math.random()*1.5).toFixed(2);
+    var delay=(Math.random()*0.5).toFixed(2);
+    var left=Math.floor(Math.random()*100);
+    var w=Math.floor(6+Math.random()*10);
+    k.style.cssText='left:'+left+'%;top:-20px;background:'+c+';animation-duration:'+dur+'s;animation-delay:'+delay+'s;width:'+w+'px;height:'+w+'px;';
+    wrap.appendChild(k);
+  }
+  document.body.appendChild(wrap);
+  setTimeout(function(){wrap.remove();},3000);
+}
+
+var PASSWORT = 'Diru_gymi';
+
+function checkPassword(){
+  var inp=document.getElementById('pw-input');
+  var err=document.getElementById('pw-error');
+  if(inp.value===PASSWORT){
+    var s=document.getElementById('pw-screen');
+    s.style.transition='opacity 0.4s';
+    s.style.opacity='0';
+    setTimeout(function(){s.style.display='none';},400);
+  } else {
+    err.textContent='Falsches Passwort. Versuche es nochmal.';
+    inp.classList.remove('shake');
+    void inp.offsetWidth;
+    inp.classList.add('shake');
+    inp.value='';
+    setTimeout(function(){err.textContent='';},3000);
+  }
+}
+document.getElementById('pw-input').addEventListener('keydown',function(e){
+  if(e.key==='Enter') checkPassword();
+});
+
+renderTopics();
+</script>
+</body>
+</html>
