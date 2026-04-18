@@ -85,6 +85,22 @@ header p { font-size: 12px; opacity: 0.7; }
 .k { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: kfall linear forwards; }
 @keyframes kfall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
 
+/* API MODAL */
+#api-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:8888; align-items:center; justify-content:center; }
+#api-modal.open { display:flex; }
+.api-box { background:#fff; border-radius:20px; padding:2rem; width:100%; max-width:420px; box-shadow:0 24px 64px rgba(0,0,0,0.2); }
+.api-box h2 { font-family:'Fraunces',serif; font-size:18px; font-weight:700; margin-bottom:8px; }
+.api-box p { font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.6; }
+.api-input { width:100%; padding:10px 14px; font-size:13px; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; outline:none; margin-bottom:10px; }
+.api-input:focus { border-color:var(--green); }
+.api-row { display:flex; gap:8px; }
+.api-save { flex:1; background:var(--green); color:white; border:none; border-radius:10px; padding:10px; font-size:14px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.api-save:hover { background:var(--green-dark); }
+.api-cancel { background:var(--bg); border:1.5px solid var(--border); border-radius:10px; padding:10px 16px; font-size:14px; cursor:pointer; font-family:'DM Sans',sans-serif; }
+.api-status { font-size:12px; margin-top:8px; min-height:16px; }
+.api-status.ok { color:var(--green-dark); }
+.api-status.nok { color:var(--red); }
+
 /* PASSWORD SCREEN */
 #pw-screen {
   position: fixed; inset: 0; z-index: 9999;
@@ -144,7 +160,8 @@ header p { font-size: 12px; opacity: 0.7; }
     <h1>Gymivorbereitung Deutsch</h1>
     <p>Alle Themen - adaptiv und interaktiv</p>
   </div>
-  <div style="display:flex;align-items:center;gap:10px;margin-left:auto;"><span style="font-size:13px;opacity:0.75;">&#x1F464; <span id="user-display"></span></span><div class="hbadge" id="total-badge">0 Fragen geloest</div><button onclick="logout()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;">Abmelden</button></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-left:auto;"><span style="font-size:13px;opacity:0.75;">&#x1F464; <span id="user-display"></span></span><div class="hbadge" id="total-badge">0 Fragen geloest</div><button onclick="logout()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;">Abmelden</button>
+<button onclick="showApiModal()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;" title="API Key einrichten">&#x2699;&#xFE0F;</button></div>
 </header>
 <div class="container">
   <div id="topics-view">
@@ -178,6 +195,23 @@ header p { font-size: 12px; opacity: 0.7; }
     <button class="gen-btn" onclick="nextQuestion()">Neue Frage generieren</button>
   </div>
 </div>
+
+<!-- API KEY MODAL -->
+<div id="api-modal">
+  <div class="api-box">
+    <h2>&#x2699;&#xFE0F; KI-Fragen einrichten</h2>
+    <p>Fuer unbegrenzte KI-generierte Fragen brauchst du einen kostenlosen Anthropic API-Key.<br>
+    Hol ihn dir auf <strong>console.anthropic.com</strong> (kostenlos registrieren).<br>
+    Der Key wird nur auf diesem Geraet gespeichert.</p>
+    <input class="api-input" type="password" id="api-key-input" placeholder="sk-ant-..." />
+    <div class="api-row">
+      <button class="api-cancel" onclick="closeApiModal()">Abbrechen</button>
+      <button class="api-save" onclick="saveApiKey()">Speichern</button>
+    </div>
+    <div class="api-status" id="api-status"></div>
+  </div>
+</div>
+
 <script>
 var TOPICS = [
   {id:"vier-faelle", name:"Die vier Faelle"},
@@ -458,18 +492,87 @@ function updateStats(){
   else sb.style.display='none';
 }
 
-function nextQuestion(){
+var lastQTexts = [];
+
+async function nextQuestion(){
   if(!activeTopic) return;
-  currentQ=pickQuestion(activeTopic); answered=false;
-  var q=currentQ;
+  answered=false;
+  currentQ=null;
+
+  var p=prog[activeTopic];
+  var pct=getPct(activeTopic);
+  var diff, diffLabel, diffInstr;
+  if(pct < 40){
+    diff=1; diffLabel="Einfach";
+    diffInstr="Erstelle eine EINFACHE Frage (Niveau 5. Klasse). Klare, eindeutige Formulierung. Offensichtliche Fehleroptionen.";
+  } else if(pct < 70){
+    diff=2; diffLabel="Mittel";
+    diffInstr="Erstelle eine MITTELSCHWERE Frage (Niveau 6. Klasse). Etwas kniffligere Optionen, aber noch loesbar.";
+  } else {
+    diff=3; diffLabel="Schwer";
+    diffInstr="Erstelle eine SCHWERE Frage (Gymnasialniveau). Sehr aehnliche Optionen, Ausnahmen und Sonderfaelle. Wirklich herausfordernd.";
+  }
+
+  var topicName = TOPICS.filter(function(t){return t.id===activeTopic;})[0].name;
+  var isLese = activeTopic==="leseverstehen1"||activeTopic==="leseverstehen2";
+
+  var stars=''; for(var i=0;i<diff;i++) stars+='&#9733;';
+  document.getElementById('q-card').innerHTML=
+    '<div class="q-num">Schwierigkeit: '+stars+' ('+diffLabel+')</div>'+
+    '<div style="text-align:center;padding:2rem;color:var(--muted);">'+
+    '<div style="font-size:28px;margin-bottom:8px;">&#x23F3;</div>Neue Frage wird generiert...</div>';
+
+  var lastList = lastQTexts.slice(-4).join(" | ");
+  var leseExtra = isLese ?
+    "Das Format MUSS sein: Zuerst ein kurzer Lesetext (3-5 Saetze) im Feld \"text\", dann eine Frage dazu." :
+    "Kein Lesetext noetig, nur Frage und Optionen. Das Feld \"text\" bleibt leer (\"\").";
+
+  var prompt = "Du bist ein Schweizer Deutschlehrer fuer Gymivorbereitung (5.-6. Klasse).\n" +
+    "Thema: " + topicName + "\n" +
+    diffInstr + "\n" +
+    leseExtra + "\n" +
+    "Bisher hatte der Schueler " + p.correct + " von " + p.total + " Fragen richtig (" + pct + "%).\n" +
+    "Diese Fragen wurden schon gestellt (NICHT wiederholen): " + (lastList||"keine") + "\n\n" +
+    "Antworte NUR mit diesem JSON-Format, kein Markdown, kein Text davor/danach:\n" +
+    "{\"text\":\"...(Lesetext oder leer)\",\"q\":\"...(Frage)\",\"o\":[\"A\",\"B\",\"C\",\"D\"],\"c\":0,\"e\":\"...(kurze Erklaerung 1-2 Saetze)\"}\n" +
+    "c ist der Index (0-3) der richtigen Antwort. Alle 4 Optionen muessen plausibel sein. Auf Deutsch.";
+
+  try {
+    var res = await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01"},
+      body:JSON.stringify({
+        model:"claude-haiku-4-5-20251001",
+        max_tokens:800,
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    var data = await res.json();
+    if(!data.content||!data.content[0]) throw new Error("no content");
+    var raw = data.content[0].text.replace(/```json|```/g,"").trim();
+    var q = JSON.parse(raw);
+    q.d = diff;
+    currentQ = q;
+    lastQTexts.push(q.q.substring(0,60));
+    if(lastQTexts.length>10) lastQTexts.shift();
+    renderQuestion(q, stars);
+  } catch(err) {
+    // Fallback: pick from local pool
+    currentQ = pickQuestion(activeTopic);
+    var q2 = currentQ;
+    var stars2=''; for(var i=0;i<q2.d;i++) stars2+='&#9733;';
+    renderQuestion(q2, stars2);
+  }
+}
+
+function renderQuestion(q, stars){
   var ohtml=q.o.map(function(opt,i){
-    return '<button class="opt-btn" onclick="answer('+i+')">'+opt+'</button>';
+    return '<button class="opt-btn" onclick="answer('+i+')">'+(["A","B","C","D"][i])+'. '+opt+'</button>';
   }).join('');
-  var stars='';for(var i=0;i<q.d;i++) stars+='&#9733;';
   var textBlock='';
-  if(q.text){
+  if(q.text&&q.text.length>5){
     textBlock='<div style="background:#F0FAF5;border-left:4px solid #1D9E75;border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:16px;font-size:14px;line-height:1.75;color:#1A1A1A;">'+
-      '<div style="font-size:11px;font-weight:600;color:#0F6E56;margin-bottom:8px;letter-spacing:0.5px;">LESETEXT</div>'+
+      '<div style="font-size:11px;font-weight:600;color:#0F6E56;margin-bottom:8px;letter-spacing:0.5px;">&#x1F4D6; LESETEXT</div>'+
       q.text+'</div>';
   }
   document.getElementById('q-card').innerHTML=
@@ -548,6 +651,9 @@ function loadProgress(username){
   } catch(e){ return false; }
 }
 
+// Global API key - stored in localStorage per device
+var apiKey = localStorage.getItem('gymiv2_apikey') || '';
+
 function checkPassword(){
   var nameInp = document.getElementById('pw-name');
   var pwInp   = document.getElementById('pw-input');
@@ -601,6 +707,46 @@ document.getElementById('pw-input').addEventListener('keydown',function(e){
 document.getElementById('pw-name').addEventListener('keydown',function(e){
   if(e.key==='Enter') document.getElementById('pw-input').focus();
 });
+
+function showApiModal(){
+  var modal = document.getElementById('api-modal');
+  document.getElementById('api-key-input').value = apiKey || '';
+  document.getElementById('api-status').textContent = '';
+  document.getElementById('api-status').className = 'api-status';
+  modal.classList.add('open');
+}
+function closeApiModal(){
+  document.getElementById('api-modal').classList.remove('open');
+}
+async function saveApiKey(){
+  var key = document.getElementById('api-key-input').value.trim();
+  var status = document.getElementById('api-status');
+  if(!key.startsWith('sk-ant-') && key.length > 0){
+    status.textContent = 'Sieht nicht wie ein Anthropic Key aus (muss mit sk-ant- beginnen).';
+    status.className = 'api-status nok'; return;
+  }
+  if(!key){ apiKey=''; localStorage.removeItem('gymiv2_apikey');
+    status.textContent = 'Key geloescht. Fallback-Fragen werden benutzt.';
+    status.className = 'api-status ok'; return;
+  }
+  status.textContent = 'Wird geprueft...'; status.className = 'api-status';
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:10,messages:[{role:'user',content:'Hi'}]})
+    });
+    if(res.status===200||res.status===400){
+      apiKey=key; localStorage.setItem('gymiv2_apikey',key);
+      status.textContent = 'Key gespeichert! KI-Fragen sind jetzt aktiv.';
+      status.className = 'api-status ok';
+      setTimeout(closeApiModal, 1500);
+    } else {
+      status.textContent = 'Ungültiger Key (Fehler '+res.status+').';
+      status.className = 'api-status nok';
+    }
+  } catch(e){ status.textContent='Verbindungsfehler.'; status.className='api-status nok'; }
+}
 
 function logout(){
   if(!confirm('Wirklich abmelden? Dein Fortschritt ist gespeichert.')) return;
