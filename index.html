@@ -85,22 +85,6 @@ header p { font-size: 12px; opacity: 0.7; }
 .k { position: absolute; width: 10px; height: 10px; border-radius: 2px; animation: kfall linear forwards; }
 @keyframes kfall { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
 
-/* API MODAL */
-#api-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:8888; align-items:center; justify-content:center; }
-#api-modal.open { display:flex; }
-.api-box { background:#fff; border-radius:20px; padding:2rem; width:100%; max-width:420px; box-shadow:0 24px 64px rgba(0,0,0,0.2); }
-.api-box h2 { font-family:'Fraunces',serif; font-size:18px; font-weight:700; margin-bottom:8px; }
-.api-box p { font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.6; }
-.api-input { width:100%; padding:10px 14px; font-size:13px; border:1.5px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; outline:none; margin-bottom:10px; }
-.api-input:focus { border-color:var(--green); }
-.api-row { display:flex; gap:8px; }
-.api-save { flex:1; background:var(--green); color:white; border:none; border-radius:10px; padding:10px; font-size:14px; font-weight:600; cursor:pointer; font-family:'DM Sans',sans-serif; }
-.api-save:hover { background:var(--green-dark); }
-.api-cancel { background:var(--bg); border:1.5px solid var(--border); border-radius:10px; padding:10px 16px; font-size:14px; cursor:pointer; font-family:'DM Sans',sans-serif; }
-.api-status { font-size:12px; margin-top:8px; min-height:16px; }
-.api-status.ok { color:var(--green-dark); }
-.api-status.nok { color:var(--red); }
-
 /* PASSWORD SCREEN */
 #pw-screen {
   position: fixed; inset: 0; z-index: 9999;
@@ -160,8 +144,7 @@ header p { font-size: 12px; opacity: 0.7; }
     <h1>Gymivorbereitung Deutsch</h1>
     <p>Alle Themen - adaptiv und interaktiv</p>
   </div>
-  <div style="display:flex;align-items:center;gap:10px;margin-left:auto;"><span style="font-size:13px;opacity:0.75;">&#x1F464; <span id="user-display"></span></span><div class="hbadge" id="total-badge">0 Fragen geloest</div><button onclick="logout()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;">Abmelden</button>
-<button onclick="showApiModal()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;" title="API Key einrichten">&#x2699;&#xFE0F;</button></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-left:auto;"><span style="font-size:13px;opacity:0.75;">&#x1F464; <span id="user-display"></span></span><div class="hbadge" id="total-badge">0 Fragen geloest</div><button onclick="logout()" style="background:rgba(255,255,255,0.15);border:none;color:white;padding:5px 12px;border-radius:99px;font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;">Abmelden</button></div>
 </header>
 <div class="container">
   <div id="topics-view">
@@ -196,22 +179,6 @@ header p { font-size: 12px; opacity: 0.7; }
   </div>
 </div>
 
-<!-- API KEY MODAL -->
-<div id="api-modal">
-  <div class="api-box">
-    <h2>&#x2699;&#xFE0F; KI-Fragen einrichten</h2>
-    <p>Fuer unbegrenzte KI-generierte Fragen brauchst du einen kostenlosen Anthropic API-Key.<br>
-    Hol ihn dir auf <strong>console.anthropic.com</strong> (kostenlos registrieren).<br>
-    Der Key wird nur auf diesem Geraet gespeichert.</p>
-    <input class="api-input" type="password" id="api-key-input" placeholder="sk-ant-..." />
-    <div class="api-row">
-      <button class="api-cancel" onclick="closeApiModal()">Abbrechen</button>
-      <button class="api-save" onclick="saveApiKey()">Speichern</button>
-    </div>
-    <div class="api-status" id="api-status"></div>
-  </div>
-</div>
-
 <script>
 var TOPICS = [
   {id:"vier-faelle", name:"Die vier Faelle"},
@@ -226,203 +193,499 @@ var TOPICS = [
   {id:"leseverstehen2", name:"Leseverstehen 2"},
   {id:"praefixe", name:"Vorsilben (Praefixe)"},
   {id:"redewendungen", name:"Redewendungen"},
-  {id:"adjektivdeklination", name:"Adjektivdeklination"}
+  {id:"adjektivdeklination", name:"Adjektivdeklination"},
+  {id:"konjunktionen", name:"Konjunktionen"},
+  {id:"satzglieder", name:"Satzglieder"},
+  {id:"kommasetzung", name:"Kommasetzung"}
 ];
 
 var Q = {
 "vier-faelle":[
-  {d:1,q:"Welchen Fall hat 'den Mann' in: 'Der Hund beisst den Mann'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"'Den Mann' ist das direkte Objekt (Wen?) = Akkusativ."},
-  {d:1,q:"In welchem Fall steht 'dem Kind'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"'Dem Kind' steht im Dativ (Wem?)."},
-  {d:1,q:"'Die Katze schlaft.' - Welcher Fall ist 'die Katze'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:0,e:"Das Subjekt steht immer im Nominativ (Wer/Was?)."},
-  {d:1,q:"Welche Frage stellt man fuer den Dativ?",o:["Wer/Was?","Wessen?","Wem?","Wen/Was?"],c:2,e:"Dativ = Wem? (indirektes Objekt)."},
-  {d:1,q:"'Er hilft dem alten Mann.' - Welcher Fall?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"Nach 'helfen' steht immer der Dativ."},
-  {d:1,q:"Welchen Fall verlangen 'durch', 'fuer', 'ohne'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"durch, fuer, gegen, ohne, um verlangen immer den Akkusativ."},
-  {d:1,q:"'Das Buch des Lehrers' - Welcher Fall ist 'des Lehrers'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"Zugehoerigkeit = Genitiv (Wessen?)."},
-  {d:2,q:"'Trotz des Regens gingen wir spazieren.' - Welchen Fall regiert 'trotz'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"trotz, wegen, waehrend, statt verlangen den Genitiv."},
-  {d:2,q:"'Ich denke an meinen Bruder.' - Welchen Fall hat 'meinen Bruder'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"'an' + Akkusativ bei Richtung/Ziel."},
-  {d:2,q:"'Wegen des schlechten Wetters' - Welcher Fall?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"'wegen' regiert den Genitiv."},
-  {d:2,q:"Welchen Fall hat 'sich' in 'Er wascht sich die Haende'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"'sich' ist indirektes Objekt = Dativ."},
-  {d:3,q:"'Ich gehe mit dem Bus in die Stadt.' - Welche Faelle kommen vor?",o:["Nur Dativ","Dativ und Akkusativ","Nominativ, Dativ und Akkusativ","Alle vier Faelle"],c:2,e:"'Ich' = Nominativ, 'dem Bus' = Dativ, 'die Stadt' = Akkusativ."},
-  {d:3,q:"Welche Praepositionen koennen Dativ ODER Akkusativ verlangen?",o:["trotz, wegen","ohne, durch","in, auf, an","mit, von"],c:2,e:"Wechselpraepositionen (in, auf, an, ueber...): Dativ = Wo?, Akkusativ = Wohin?."},
-  {d:3,q:"'Er ist sich sicher.' - In welchem Fall steht 'sich'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"'sicher sein' mit Reflexivpronomen verlangt den Dativ."}
+  {d:1,q:"In welchem Fall steht 'die Katze' in: 'Die Katze schlaeft.'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:0,e:"Das Subjekt steht immer im Nominativ (Wer schlaeft?)."},
+  {d:1,q:"Welche Frage stellt man fuer den Akkusativ?",o:["Wer/Was?","Wessen?","Wem?","Wen/Was?"],c:3,e:"Akkusativ = Wen/Was? (direktes Objekt)."},
+  {d:1,q:"'Er hilft dem alten Mann.' - Welcher Fall ist 'dem alten Mann'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"'helfen' verlangt immer den Dativ."},
+  {d:1,q:"Welchen Fall regiert 'fuer'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"fuer, durch, gegen, ohne, um = immer Akkusativ."},
+  {d:1,q:"'Das Buch des Lehrers' - Welcher Fall ist 'des Lehrers'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"Genitiv = Wessen? Zeigt Zugehoerigkeit."},
+  {d:1,q:"'Ich gebe dem Kind ein Buch.' - 'dem Kind' ist welcher Fall?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"Das indirekte Objekt steht im Dativ (Wem gebe ich?)."},
+  {d:1,q:"'Die Mutter liebt ihre Tochter.' - Welcher Fall ist 'ihre Tochter'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"Das direkte Objekt steht im Akkusativ (Wen liebt die Mutter?)."},
+  {d:1,q:"Wie lautet die Frage fuer den Genitiv?",o:["Wer/Was?","Wessen?","Wem?","Wen/Was?"],c:1,e:"Genitiv = Wessen?"},
+  {d:1,q:"'Mit dem Bus fahren' - Welchen Fall regiert 'mit'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"mit, bei, nach, seit, von, zu, aus = immer Dativ."},
+  {d:1,q:"Welcher Fall ist das Subjekt eines Satzes?",o:["Immer Nominativ","Immer Akkusativ","Immer Dativ","Haengt vom Verb ab"],c:0,e:"Das Subjekt steht IMMER im Nominativ."},
+  {d:1,q:"'Er kauft einen Apfel.' - 'einen Apfel' ist welcher Fall?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"Direktes Objekt = Akkusativ (Wen/Was kauft er?)."},
+  {d:1,q:"Welchen Fall regiert 'durch'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"durch = immer Akkusativ."},
+  {d:1,q:"'Das Auto meines Vaters' - Welcher Fall ist 'meines Vaters'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"Besitz = Genitiv (Wessen Auto?)."},
+  {d:1,q:"'Sie hilft ihrer Schwester.' - 'ihrer Schwester' ist welcher Fall?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"'helfen' + Dativ (Wem hilft sie?)."},
+  {d:1,q:"Welchen Fall regiert 'ohne'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"ohne = immer Akkusativ."},
+  {d:1,q:"'Die Frau des Lehrers' - Was fragt man fuer den unterstrichenen Fall?",o:["Wer?","Wessen?","Wem?","Wen?"],c:1,e:"'des Lehrers' = Genitiv, Frage: Wessen?"},
+  {d:1,q:"'Er schenkt seiner Mutter Blumen.' - 'seiner Mutter' ist welcher Fall?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"indirektes Objekt = Dativ (Wem schenkt er?)."},
+  {d:2,q:"'Trotz des schlechten Wetters' - Welchen Fall regiert 'trotz'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"trotz, wegen, waehrend, statt = Genitiv."},
+  {d:2,q:"'Ich denke an meinen Bruder.' - Welchen Fall hat 'meinen Bruder'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"'denken an' + Akkusativ."},
+  {d:2,q:"'Er erinnert sich an die schoene Zeit.' - Welcher Fall ist 'die schoene Zeit'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"'sich erinnern an' + Akkusativ."},
+  {d:2,q:"Welche Praeposition verlangt IMMER Genitiv?",o:["in","mit","wegen","durch"],c:2,e:"'wegen' = immer Genitiv (wegen des Regens)."},
+  {d:2,q:"'Er waescht sich die Haende.' - In welchem Fall steht 'sich'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"'sich' = indirektes Objekt = Dativ."},
+  {d:2,q:"'Ich freue mich ueber das Geschenk.' - Welcher Fall ist 'das Geschenk'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"'sich freuen ueber' + Akkusativ."},
+  {d:2,q:"Welche Praeposition kann Dativ ODER Akkusativ regieren?",o:["wegen","mit","ohne","auf"],c:3,e:"'auf' (Wechselpraepositionen) = Dativ (Wo?) oder Akkusativ (Wohin?)."},
+  {d:2,q:"'Sie wartet auf den Bus.' - Welcher Fall ist 'den Bus'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"'warten auf' + Akkusativ."},
+  {d:2,q:"'Er verfuegt ueber grosse Erfahrung.' - Welcher Fall ist 'grosse Erfahrung'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"'verfuegen ueber' + Akkusativ."},
+  {d:2,q:"'Sie bedarf der Ruhe.' - Welcher Fall ist 'der Ruhe'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"'beduerftig sein / beduerfen' + Genitiv (veraltet aber korrekt)."},
+  {d:2,q:"'Das Buch liegt auf dem Tisch.' - Warum steht 'dem Tisch' im Dativ?",o:["Weil 'auf' immer Dativ regiert","Weil es eine Lage (Wo?) ausdrueckt","Weil es das Subjekt ist","Weil 'liegen' Dativ verlangt"],c:1,e:"Wechselpraepositionen: Lage (Wo?) = Dativ, Bewegung (Wohin?) = Akkusativ."},
+  {d:2,q:"'Er legt das Buch auf den Tisch.' - Warum steht 'den Tisch' im Akkusativ?",o:["Weil 'auf' immer Akkusativ regiert","Weil es eine Bewegung/Richtung (Wohin?) ist","Weil 'legen' Akkusativ verlangt","Zufaellig"],c:1,e:"Wechselpraepositionen: Bewegung (Wohin?) = Akkusativ."},
+  {d:2,q:"'Er gedenkt seiner Grossmutter.' - Welcher Fall ist 'seiner Grossmutter'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"'gedenken' verlangt Genitiv als Objekt."},
+  {d:3,q:"'Ich bin mir sicher.' - Welcher Fall ist 'mir'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"'sicher sein' mit Reflexivpronomen = Dativ."},
+  {d:3,q:"'Er wohnt ausserhalb der Stadt.' - Welchen Fall regiert 'ausserhalb'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"ausserhalb, innerhalb, oberhalb, unterhalb, diesseits, jenseits = Genitiv."},
+  {d:3,q:"'Er ist des Mordes angeklagt.' - Welcher Fall ist 'des Mordes'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"'anklagen' + Genitiv (in der Rechtssprache)."},
+  {d:3,q:"Welcher Satz ist grammatisch FALSCH?",o:["Wegen des Regens blieben wir drinnen.","Wegen dem Regen blieben wir drinnen.","Trotz des Wetters gingen wir raus.","Wir blieben wegen schlechten Wetters drinnen."],c:1,e:"'wegen dem Regen' ist umgangssprachlich falsch - korrekt: 'wegen des Regens' (Genitiv)."},
+  {d:3,q:"'Sie schaemt sich ihrer Tat.' - Welcher Fall ist 'ihrer Tat'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"'sich schaemen' + Genitiv (gehoben/veraltet)."},
+  {d:3,q:"In welchem Satz ist die Kasusverwendung korrekt?",o:["Ich gedenke ihn.","Er bedarf die Hilfe.","Sie glueckte ihm der Versuch.","Ich erinnere mich an den Urlaub."],c:3,e:"'sich erinnern an' + Akkusativ = korrekt. Die anderen enthalten Fehler."},
+  {d:3,q:"Was ist ein Dativobjekt?",o:["Das Subjekt des Satzes","Das direkte Objekt im Akkusativ","Das indirekte Objekt im Dativ","Ein Genitiv-Attribut"],c:2,e:"Dativobjekt = das indirekte Objekt, steht im Dativ, antwortet auf 'Wem?'."},
+
+  {d:1,q:"Welchen Fall verlangt 'gegen'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"gegen = immer Akkusativ."},
+  {d:1,q:"'Ich sehe die Frau.' - Welcher Fall ist 'die Frau'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"Direktes Objekt = Akkusativ (Wen sehe ich?)."},
+  {d:1,q:"Welchen Fall regiert 'von'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"von = immer Dativ."},
+  {d:1,q:"Welchen Fall regiert 'seit'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"seit = immer Dativ."},
+  {d:1,q:"Welchen Fall regiert 'bei'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"bei = immer Dativ."},
+  {d:1,q:"'Sie liest ein Buch.' - Welcher Fall ist 'ein Buch'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"Akkusativ = direktes Objekt (Was liest sie?)."},
+  {d:1,q:"Welcher Fall antwortet auf 'Wo' (Lage)?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"Dativ bei Lage (Wo?): im Haus, auf dem Tisch."},
+  {d:1,q:"Welcher Fall antwortet auf 'Wohin' (Richtung)?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"Akkusativ bei Richtung (Wohin?): in das Haus."},
+  {d:1,q:"'Er schenkt seiner Mutter Blumen.' - Welcher Fall ist 'seiner Mutter'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"indirektes Objekt = Dativ (Wem schenkt er?)."},
+  {d:1,q:"'Die Tasche der Lehrerin' - Welcher Fall ist 'der Lehrerin'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"Genitiv = Zugehoerigkeit (Wessen Tasche?)."},
+  {d:2,q:"'Statt des Buches kaufte er ein Heft.' - Welcher Fall nach 'statt'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"statt = Genitiv."},
+  {d:2,q:"'Er geht durch den Park.' - Welcher Fall ist 'den Park'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"durch = Akkusativ."},
+  {d:2,q:"'Er wohnt gegenueber dem Bahnhof.' - Welcher Fall nach 'gegenueber'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:2,e:"gegenueber = Dativ."},
+  {d:2,q:"'Sie wartet auf den Bus.' - Welcher Fall ist 'den Bus'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:3,e:"warten auf = Akkusativ."},
+  {d:2,q:"'Das Buch liegt auf dem Tisch.' - Warum Dativ?",o:["'auf' ist immer Dativ","Es ist Lage (Wo?) = Dativ","Es ist Richtung = Akkusativ","Zufaellig"],c:1,e:"Wechselpraepositionen: Lage (Wo?) = Dativ."},
+  {d:3,q:"'Ungeachtet seiner Fehler bekam er den Job.' - Welcher Fall nach 'ungeachtet'?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"ungeachtet = Genitiv."},
+  {d:3,q:"'Es bedarf keiner weiteren Erklaerung.' - Welcher Fall?",o:["Nominativ","Genitiv","Dativ","Akkusativ"],c:1,e:"'beduerftig sein / beduerftig' verlangt Genitiv."},
+  {d:3,q:"Welcher Satz ist grammatisch korrekt?",o:["Wegen dem Regen blieb er zu Hause.","Wegen des Regens blieb er zu Hause.","Wegen den Regen blieb er zu Hause.","Wegen Regen blieb er zu Hause."],c:1,e:"wegen + Genitiv: 'wegen des Regens'."},
+
 ],
 "direkte-rede":[
-  {d:1,q:"Welches Satzzeichen steht VOR der direkten Rede?",o:["Komma","Semikolon","Doppelpunkt","Punkt"],c:2,e:"Vor direkter Rede steht immer ein Doppelpunkt."},
-  {d:1,q:"Wie lautet die korrekte direkte Rede? Peter sagt er ist muede.",o:["Peter sagt, 'er ist muede.'","Peter sagt: 'Er ist muede.'","Peter sagt: er ist muede.","Peter sagt; 'Er ist muede.'"],c:1,e:"Doppelpunkt vor direkter Rede, Grossschreibung des ersten Buchstabens."},
-  {d:1,q:"Was steht am Ende einer Frage in direkter Rede?",o:["Punkt","Komma","Ausrufezeichen","Fragezeichen"],c:3,e:"Das Fragezeichen steht vor dem schliessenden Anfuehrungszeichen."},
-  {d:1,q:"Was ist richtig an direkter Rede?",o:["Steht nie in Anfuehrungszeichen","Gibt eine Aussage woertlich wieder","Verwendet immer Konjunktiv","Braucht keinen Doppelpunkt"],c:1,e:"Direkte Rede gibt eine Aussage woertlich wieder und steht in Anfuehrungszeichen."},
-  {d:2,q:"Welche Version ist korrekt?",o:["Er sagte: 'ich komme morgen.'","Er sagte: 'Ich komme morgen.'","Er sagte, 'Ich komme morgen.'","Er sagte - 'Ich komme morgen.'"],c:1,e:"Doppelpunkt vor direkter Rede, Grossschreibung."},
-  {d:2,q:"Was ist der Unterschied zwischen direkter und indirekter Rede?",o:["Direkte Rede: woertlich + Anfuehrungszeichen. Indirekte Rede: berichtend + Konjunktiv.","Direkte Rede mit Doppelpunkt, indirekte mit Komma.","Kein Unterschied.","Direkte Rede immer wahr, indirekte erfunden."],c:0,e:"Direkte Rede gibt Worte woertlich wieder. Indirekte Rede berichtet (oft mit Konjunktiv I)."},
-  {d:3,q:"Welche Konjunktivform wird in indirekter Rede bevorzugt?",o:["Konjunktiv I","Konjunktiv II","Indikativ","Imperativ"],c:0,e:"In indirekter Rede wird Konjunktiv I bevorzugt (er sage, er habe)."},
-  {d:3,q:"'Ich mag Schokolade', sagte sie, 'aber nicht zu viel.' - Korrekt?",o:["Ja, korrekt","Nein - kein Komma nach Schokolade","Nein - kein Komma vor aber","Nein - Doppelpunkt statt Komma"],c:0,e:"Korrekt. Bei unterbrochener direkter Rede wird der zweite Teil in Anfuehrungszeichen wieder aufgenommen."}
+  {d:1,q:"Was steht vor direkter Rede?",o:["Komma","Doppelpunkt","Semikolon","Punkt"],c:1,e:"Vor direkter Rede steht immer ein Doppelpunkt."},
+  {d:1,q:"Wie schreibt man das erste Wort der direkten Rede?",o:["Klein","Gross","Wie im Satz davor","Unterstrichen"],c:1,e:"Das erste Wort der direkten Rede wird gross geschrieben."},
+  {d:1,q:"'Er fragte: Wo bist du? - Was steht am Ende der direkten Rede?",o:["Punkt","Komma","Fragezeichen","Ausrufezeichen"],c:2,e:"Das Fragezeichen steht vor dem schliessenden Anfuehrungszeichen."},
+  {d:1,q:"Direkte Rede gibt eine Aussage wie wieder?",o:["sinngemaeass","woertlich","vereinfacht","uebersetzt"],c:1,e:"Direkte Rede = woertliche Wiedergabe (mit Anfuehrungszeichen)."},
+  {d:1,q:"'Ich komme morgen', sagte er. - Korrekte Zeichensetzung?",o:["Ja","Nein, Punkt statt Komma","Nein, kein Komma","Nein, Semikolon"],c:0,e:"Korrekt: Wenn Begleitsatz folgt, steht Komma nach dem Anfuehrungszeichen."},
+  {d:1,q:"Welche Satzzeichen umschliessen direkte Rede?",o:["Klammern ()","Anfuehrungszeichen","Gedankenstriche --","Sternchen **"],c:1,e:"Direkte Rede steht in Anfuehrungszeichen."},
+  {d:1,q:"'Komm sofort!', rief sie. - Was folgt nach dem Ausrufezeichen?",o:["Punkt","Komma, dann Begleitsatz","Nochmals Ausrufezeichen","Nichts"],c:1,e:"Nach ! oder ? + Anfuehrungszeichen folgt Komma, wenn der Begleitsatz noch kommt."},
+  {d:1,q:"Was ist der Begleitsatz bei direkter Rede?",o:["Die direkte Rede selbst","Der Satz der angibt wer spricht (sagte er, rief sie...)","Der erste Satz","Die Erklaerung danach"],c:1,e:"Der Begleitsatz nennt die sprechende Person: 'sagte er', 'fragte sie' etc."},
+  {d:1,q:"Er sagte: Ich bin muede. - Was fehlt?",o:["Der Doppelpunkt","Die Anfuehrungszeichen","Das Komma","Das Fragezeichen"],c:1,e:"Direkte Rede muss in Anfuehrungszeichen stehen."},
+  {d:1,q:"'Hast du gegessen?' fragte sie. - Korrekt?",o:["Ja","Nein, Komma fehlt nach Fragezeichen","Nein, Doppelpunkt fehlt","Nein, kein Fragezeichen"],c:0,e:"Korrekt: Nach ? + Anfuehrungszeichen direkt der Begleitsatz, kein extra Komma."},
+  {d:2,q:"Welche Version ist korrekt?",o:["Er sagte: ich komme morgen.","Er sagte: Ich komme morgen.","Er sagte, Ich komme morgen.","Er sagte - Ich komme morgen."],c:1,e:"Doppelpunkt + Grossschreibung des ersten Wortes der direkten Rede."},
+  {d:2,q:"'Ich mag Schokolade', sagte sie, 'aber nicht zu viel.' - Korrekt?",o:["Ja","Nein, 'Aber' muss gross sein","Nein, Punkt statt Komma","Nein, kein zweites Anfuehrungszeichen"],c:0,e:"Korrekt. Unterbrechung: 'aber' klein weitergeschrieben."},
+  {d:2,q:"Was ist der Unterschied zwischen direkter und indirekter Rede?",o:["Direkt = woertlich + Anf.zeichen; Indirekt = Konjunktiv ohne Anf.zeichen","Kein Unterschied","Direkt = Vergangenheit; Indirekt = Gegenwart","Direkt = lang; Indirekt = kurz"],c:0,e:"Direkte Rede: woertlich, Anfuehrungszeichen. Indirekte Rede: Konjunktiv I, keine Anfuehrungszeichen."},
+  {d:2,q:"'Er rief: Hilfe!' - Was steht nach dem Ausrufezeichen?",o:["Punkt","Komma","Ausrufezeichen","Nichts"],c:3,e:"Nach dem schliessenden Anfuehrungszeichen steht kein weiteres Satzzeichen, wenn die direkte Rede bereits ! oder ? hat."},
+  {d:2,q:"Er sagte, er sei muede. - Was ist das?",o:["Direkte Rede","Indirekte Rede mit Konjunktiv I","Falscher Satz","Indirekte Rede mit Indikativ"],c:1,e:"'sei' = Konjunktiv I = typische indirekte Rede ohne Anfuehrungszeichen."},
+  {d:2,q:"Warum benutzt man Konjunktiv I in der indirekten Rede?",o:["Weil es schoen klingt","Um zu zeigen, dass man die Aussage nicht selbst bestaetigt","Weil Indikativ verboten ist","Wegen der Grammatikregel ohne Sinn"],c:1,e:"Konjunktiv I signalisiert: Ich gebe nur weiter was jemand gesagt hat, ich bestaetigen es nicht."},
+  {d:2,q:"'Er kommt morgen', sagte sie. vs. Sie sagte, er komme morgen. - Was ist der Unterschied?",o:["Kein Unterschied in Bedeutung","Erste = direkte Rede, zweite = indirekte Rede","Erste ist falsch","Zweite ist umgangssprachlich"],c:1,e:"Erste: direkte Rede (woertlich, Anfuehrungszeichen). Zweite: indirekte Rede (Konjunktiv I, keine Anfuehrungszeichen)."},
+  {d:2,q:"Welche Frage hilft dir zu entscheiden ob direkte oder indirekte Rede?",o:["Wer spricht?","Gibt es Anfuehrungszeichen?","Ist das Verb im Konjunktiv?","Beide B und C"],c:3,e:"Direkte Rede = Anfuehrungszeichen + woertlich. Indirekte Rede = kein Anfuehrungszeichen + Konjunktiv I."},
+  {d:3,q:"Welche Konjunktivform benutzt man in der indirekten Rede bevorzugt?",o:["Konjunktiv I","Konjunktiv II","Indikativ","Imperativ"],c:0,e:"Konjunktiv I (er sage, er habe, er sei). Konjunktiv II nur wenn Konj.I = Indikativ waere."},
+  {d:3,q:"'Er sagt, er komme morgen.' - 'komme' ist welche Verbform?",o:["Indikativ Praesens","Konjunktiv I Praesens","Konjunktiv II","Imperativ"],c:1,e:"'komme' = Konjunktiv I von 'kommen'. Typisch indirekte Rede."},
+  {d:3,q:"Wann benutzt man Konjunktiv II in der indirekten Rede?",o:["Immer","Nie","Wenn Konjunktiv I identisch mit Indikativ waere","Nur bei Verneinung"],c:2,e:"z.B. 'sie haben' (Ind.) = 'sie haben' (Konj.I) -> nicht unterscheidbar -> Konj.II: 'sie haetten'."},
+  {d:3,q:"Forme um in indirekte Rede: Er sagt: 'Ich habe keine Zeit.'",o:["Er sagt, er hat keine Zeit.","Er sagt, er habe keine Zeit.","Er sagt, er hatte keine Zeit.","Er sagt, er haette keine Zeit."],c:1,e:"'habe' = Konjunktiv I von 'haben'. Korrekte indirekte Rede."},
+  {d:3,q:"Forme um: Sie fragte: 'Bist du krank?'",o:["Sie fragte, ob er krank sei.","Sie fragte, er sei krank.","Sie fragte, ob er krank ist.","Sie fragte, dass er krank sei."],c:0,e:"Fragen in indirekter Rede: 'ob' + Konjunktiv I. 'ob er krank sei'."},
+  {d:3,q:"Welcher Satz zeigt korrekte indirekte Rede?",o:["Er sagte: er komme.","Er sagte, dass er kommt.","Er sagte, er komme.","Er sagte - er kommt."],c:2,e:"Korrekt: 'Er sagte, er komme.' - kein Anfuehrungszeichen, Konjunktiv I, optional mit 'dass'."}
 ],
 "rechtschreibung":[
-  {d:1,q:"Wie schreibt man richtig?",o:["das selbe","dasselbe","dass selbe","das Selbe"],c:1,e:"'dasselbe' wird zusammengeschrieben (Demonstrativpronomen)."},
-  {d:1,q:"'Ich fahre ___ Hause.' Was fehlt?",o:["nach","zu","von","in"],c:0,e:"'nach Hause' = Richtung. 'Zu Hause' = Ort (at home)."},
-  {d:1,q:"Welches ist korrekt?",o:["auf Grund","aufgrund","Auf Grund","Auf grund"],c:1,e:"'aufgrund' wird als Praepositon zusammengeschrieben."},
-  {d:1,q:"'Er ist ___ krank, ___ er nicht kommen kann.' Was passt?",o:["so...das","so...dass","so...dasz","So...Dass"],c:1,e:"'so...dass' ist korrekt (neue Rechtschreibung)."},
-  {d:1,q:"Welche Schreibweise ist richtig?",o:["viel leicht","vielleicht","Vielleicht","viel-leicht"],c:1,e:"'vielleicht' wird immer zusammengeschrieben (Adverb)."},
-  {d:2,q:"Welches Wort ist FALSCH geschrieben?",o:["Rhythmus","Rhytmus","Rhythmen","rhythmisch"],c:1,e:"Korrekt: Rhythmus (mit th und y). 'Rhytmus' ist falsch."},
-  {d:2,q:"'Das/Dass' - Welches passt? 'Ich weiss, ___ du kommst.'",o:["das","dass","Das","Dass"],c:1,e:"'dass' ist eine Konjunktion. Test: kann man es durch 'welches' ersetzen? Nein -> dass."},
-  {d:2,q:"Was wird grossgeschrieben?",o:["schnell laufen","das Laufen","laufend","gelaufen"],c:1,e:"Substantivierte Verben werden grossgeschrieben: das Laufen, das Schreiben."},
-  {d:3,q:"Welches Wort hat die richtige Schreibweise?",o:["Schifffahrt","Schiffahrt","Schifahrt","Schiffsfahrt"],c:0,e:"Neue Rechtschreibung: drei gleiche Konsonanten bleiben: Schiff + Fahrt = Schifffahrt."},
-  {d:3,q:"Welche Form ist korrekt?",o:["Er ass zu viel.","Er az zu viel.","Er aas zu viel.","Er as zu viel."],c:0,e:"'ass' mit Doppel-s. 'zu viel' wird getrennt geschrieben."}
+  {d:1,q:"Welches Wort ist richtig geschrieben?",o:["das selbe","dasselbe","dass selbe","das Selbe"],c:1,e:"'dasselbe' = zusammengeschriebenes Demonstrativpronomen."},
+  {d:1,q:"'Ich fahre ___ Hause.' - Was passt?",o:["nach","zu","von","in"],c:0,e:"'nach Hause' = Richtung. 'Zu Hause' = ich bin zu Hause (Ort)."},
+  {d:1,q:"'Er ist ___ krank, ___ er nicht kommen kann.' - Was passt?",o:["so...das","so...dass","so...dasz","So...Dass"],c:1,e:"'so...dass' ist korrekt."},
+  {d:1,q:"Welche Schreibweise ist korrekt?",o:["aufgrund","auf Grund","Aufgrund","auf grund"],c:0,e:"'aufgrund' = Praeposition, zusammengeschrieben."},
+  {d:1,q:"'Das/Dass' - Welches passt? 'Ich weiss, ___ du kommst.'",o:["das","dass","Das","Dass"],c:1,e:"Test: 'welches' einsetzen? Nein = 'dass' (Konjunktion)."},
+  {d:1,q:"Welche Schreibweise ist korrekt?",o:["er laeuft","er lauft","er laufet","er laueft"],c:0,e:"Starkes Verb mit Umlaut: er laeuft."},
+  {d:1,q:"Wie schreibt man 'viel leicht' oder 'vielleicht'?",o:["viel leicht","vielleicht","Vielleicht","Viel Leicht"],c:1,e:"'vielleicht' = Adverb, immer zusammengeschrieben."},
+  {d:1,q:"Welches Wort wird GROSS geschrieben?",o:["schnell","schoen","das Schreiben","laut"],c:2,e:"Substantivierte Verben/Adjektive werden grossgeschrieben: das Schreiben."},
+  {d:1,q:"'Er hat ___ viel gegessen.' - das oder dass?",o:["das","dass"],c:0,e:"'das' = Pronomen (= dieses). Test: 'dieses' einsetzen? Ja = 'das'."},
+  {d:1,q:"Wie schreibt man richtig?",o:["weiss","Weiss","weiß","Weiß"],c:2,e:"'weiß' = korrekt nach langem Vokal (weise ich weiss, er weiß)."},
+  {d:1,q:"Welches Wort ist FALSCH geschrieben?",o:["Freundschaft","Freundlichkeit","Freundlichkeid","Freundschaftlich"],c:2,e:"'Freundlichkeid' ist falsch - korrekt: 'Freundlichkeit'."},
+  {d:1,q:"'Er kommt ___ Mittag an.' - um oder am?",o:["um","am","zu","nach"],c:0,e:"'um + Uhrzeit/Tageszeit' = um Mittag, um 3 Uhr."},
+  {d:1,q:"Getrennt oder zusammen: 'hand gemacht' oder 'handgemacht'?",o:["hand gemacht","handgemacht","hand-gemacht","Hand Gemacht"],c:1,e:"Zusammengesetzte Adjektive werden zusammengeschrieben: handgemacht."},
+  {d:1,q:"Welches Wort ist richtig?",o:["warscheinlich","wahrscheinlich","Warscheinlich","wahrscheinlch"],c:1,e:"'wahrscheinlich' - mit 'h' nach 'wa' und 'r'."},
+  {d:1,q:"'Er isst gerne.' - Warum 'isst' mit Doppel-s?",o:["Zufaellig","Kurzer Vokal vor ss (neue Rechtschreibung)","Langer Vokal","Regelausnahme"],c:1,e:"Neue Rechtschreibung: kurzer Vokal + ss (er isst, er muss). Langer Vokal + ß (er aß, er weiß)."},
+  {d:1,q:"Welches Wort ist korrekt?",o:["spass","Spaß","spaß","Spass"],c:1,e:"'Spaß' = korrekt (langer Vokal + ß). Nomen = Grossschreibung."},
+  {d:1,q:"'Morgen frueh ___ ich kommen.' - wird oder werde?",o:["wird","werde","werden","werdet"],c:1,e:"'ich werde' = 1. Person Singular Futur."},
+  {d:2,q:"Welches Wort ist FALSCH geschrieben?",o:["Rhythmus","Rhytmus","Rhythmen","rhythmisch"],c:1,e:"'Rhytmus' ist falsch - korrekt: Rhythmus (mit th und y)."},
+  {d:2,q:"Welche Variante ist korrekt?",o:["er aß zu viel","er ass zu viel","er aß zuviel","er ass zuviel"],c:0,e:"'aß' (langer Vokal = ß). 'zu viel' = getrennt."},
+  {d:2,q:"Welches Wort mit Doppelkonsonant ist korrekt?",o:["Schiffahrt","Schifffahrt","Schiffsfahrt","Schifahrt"],c:1,e:"Neue Rechtschreibung: drei gleiche Konsonanten bleiben: Schiff+Fahrt = Schifffahrt."},
+  {d:2,q:"'inwiefern' - zusammen oder getrennt?",o:["in wie fern","inwiefern","In wie Fern","In Wie Fern"],c:1,e:"'inwiefern' = zusammengeschrieben."},
+  {d:2,q:"Welche Schreibweise ist korrekt?",o:["daß","dass","Das","das"],c:1,e:"Seit 1996: 'dass' (nicht mehr 'daß')."},
+  {d:2,q:"'Er hat sich ___ Sache angenommen.' - der oder die?",o:["der (Genitiv Fem.)","die (Nominativ)","den","dem"],c:0,e:"'sich einer Sache annehmen' + Genitiv: 'der Sache'."},
+  {d:2,q:"Welches Wort ist richtig geschrieben?",o:["Philosophie","Filosophie","Philosophi","Philosofie"],c:0,e:"'Philosophie' - griechisch, mit 'ph' (= f) und 'ie' am Ende."},
+  {d:2,q:"Welches Wort ist richtig?",o:["spazierengehn","spazieren gehen","Spazieren gehen","Spazierengehen"],c:1,e:"Infinitivverbindungen: 'spazieren gehen' = getrennt geschrieben."},
+  {d:2,q:"Welche Schreibweise ist korrekt?",o:["soviel","so viel","So Viel","SoViel"],c:1,e:"'so viel' = getrennt (Adverb + Indefinitpronomen). Ausnahme: 'soviel ich weiss' (Konjunktion) kann zusammen."},
+  {d:2,q:"'Er sprach ___ Thema.' - ueber das oder uebers?",o:["ueber das","uebers","ubers","Uebers"],c:0,e:"Formal korrekt: 'ueber das Thema'. 'uebers' ist umgangssprachliche Verschmelzung."},
+  {d:3,q:"'___ interessiert mich, ob er kommt.' - was/Was?",o:["was","Was","das","Das"],c:1,e:"Am Satzanfang: 'Was' gross."},
+  {d:3,q:"Welche Variante ist korrekt?",o:["zu Gunsten","zugunsten","Zu Gunsten","zu gunsten"],c:1,e:"'zugunsten' = Praeposition, zusammengeschrieben."},
+  {d:3,q:"Welcher Satz ist RECHTSCHREIBLICH korrekt?",o:["Er isst gerne Aepfel.","Er ißt gerne Äpfel.","Er isst gerne äpfel.","Er Isst gerne Aepfel."],c:0,e:"'isst' korrekt (kurzes i = ss). Substantive gross."},
+  {d:3,q:"'Wohlbefinden' oder 'Wohl befinden'?",o:["Wohl befinden","wohlbefinden","das Wohlbefinden","das Wohl befinden"],c:2,e:"Als Nomen: 'das Wohlbefinden' = zusammengeschrieben und grossgeschrieben."},
+  {d:3,q:"Welches Wort ist IMMER getrennt zu schreiben?",o:["aufgrund","imstande","zu Hause","inwiefern"],c:2,e:"'zu Hause' = immer getrennt (ortsfest). 'nach Hause' ebenfalls getrennt."},
+  {d:3,q:"'kennenlernen' oder 'kennen lernen'?",o:["kennenlernen","kennen lernen","Kennenlernen","Kennen Lernen"],c:0,e:"'kennenlernen' wird nach neuer Rechtschreibung zusammengeschrieben."},
+  {d:3,q:"Welcher Satz enthält einen Rechtschreibfehler?",o:["Er ist wohlauf.","Das Wohlbefinden ist wichtig.","Er befindet sich wohl.","Er fühlt sich Wohl."],c:3,e:"'Wohl' in 'fühlt sich wohl' ist ein Adverb = Kleinschreibung. 'Wohl' grossschreiben ist falsch."},
+
+  {d:1,q:"'Er hat ___ viel gegessen.' - zu oder zuviel?",o:["zu viel (getrennt)","zuviel (zusammen)","Zu Viel","ZuViel"],c:0,e:"'zu viel' = immer getrennt."},
+  {d:1,q:"Getrennt oder zusammen: 'Handarbeit'?",o:["Hand Arbeit","Handarbeit","hand-Arbeit","Hand arbeit"],c:1,e:"Zusammengesetzte Nomen werden zusammengeschrieben."},
+  {d:1,q:"'In zwischen' oder 'inzwischen'?",o:["In zwischen","in zwischen","inzwischen","Inzwischen"],c:2,e:"'inzwischen' = Adverb, zusammengeschrieben, klein (ausser Satzanfang)."},
+  {d:1,q:"Wie schreibt man richtig?",o:["warscheinlich","wahrscheinlich","Warscheinlich","wahrscheindlich"],c:1,e:"'wahrscheinlich' mit 'hr' und 'ch'."},
+  {d:1,q:"Richtig: 'Spaß' oder 'Spass'?",o:["Spass","Spaß","spass","spaß"],c:1,e:"Langer Vokal vor ß: Spaß."},
+  {d:2,q:"Welche Schreibweise ist korrekt?",o:["aufjedenfall","auf jeden Fall","Aufjedenfall","Auf jeden fall"],c:1,e:"'auf jeden Fall' = getrennt (Praeposition + Adjektiv + Nomen)."},
+  {d:2,q:"'mithilfe' oder 'mit Hilfe'?",o:["mithilfe","mit Hilfe","Mit Hilfe","Mithilfe"],c:0,e:"'mithilfe' = Praeposition, zusammengeschrieben."},
+  {d:2,q:"Welches Adjektiv ist richtig geschrieben?",o:["blaugrau","blau-grau","Blau-grau","Blau grau"],c:0,e:"Zusammengesetzte Adjektive ohne Bindestrich: blaugrau."},
+  {d:3,q:"'kennenlernen' oder 'kennen lernen'?",o:["kennenlernen","kennen lernen","Kennenlernen","Kennen Lernen"],c:0,e:"'kennenlernen' wird zusammengeschrieben."},
+  {d:3,q:"'Wohlbefinden' - richtig?",o:["Wohl befinden","wohlbefinden","das Wohlbefinden","das Wohl befinden"],c:2,e:"Als Nomen: 'das Wohlbefinden' = zusammen und gross."},
+  {d:3,q:"Welcher Satz ist korrekt?",o:["Er isst gerne Aepfel.","Er ißt gerne Äpfel.","Er isst gerne äpfel.","Er Isst gerne Aepfel."],c:0,e:"'isst' korrekt (kurzes i = ss). Nomen gross."},
+
 ],
 "wortarten":[
-  {d:1,q:"Welche Wortart ist 'schnell'?",o:["Nomen","Verb","Adjektiv","Adverb"],c:2,e:"'schnell' beschreibt eine Eigenschaft = Adjektiv (steigerbar: schneller, am schnellsten)."},
-  {d:1,q:"'laufen, schreiben, denken' - Welche Wortart?",o:["Nomen","Verben","Adjektive","Pronomen"],c:1,e:"Verben druecken Handlungen, Vorgaenge oder Zustaende aus."},
-  {d:1,q:"Welche Wortart ist 'weil'?",o:["Adverb","Praepositon","Konjunktion","Artikel"],c:2,e:"'weil' ist eine unterordnende Konjunktion - leitet einen Nebensatz ein."},
-  {d:1,q:"'Er' in 'Er geht nach Hause' ist ein...",o:["Nomen","Adjektiv","Pronomen","Verb"],c:2,e:"'Er' ersetzt ein Nomen = Pronomen (Personalpronomen)."},
-  {d:1,q:"Welche Wortart ist 'in'?",o:["Konjunktion","Praepositon","Adverb","Interjektion"],c:1,e:"'in' ist eine Praepositon - steht vor einem Nomen."},
-  {d:2,q:"Welche Wortart ist 'sehr' in 'Er ist sehr muede'?",o:["Adjektiv","Adverb","Konjunktion","Pronomen"],c:1,e:"'sehr' verstaerkt das Adjektiv 'muede' = Gradpartikel / Adverb."},
-  {d:2,q:"Welche Wortart ist 'obwohl'?",o:["Koordinierende Konjunktion","Subordinierende Konjunktion","Adverb","Praepositon"],c:1,e:"'obwohl' leitet einen Nebensatz ein = subordinierende Konjunktion."},
-  {d:2,q:"Was ist ein Possessivpronomen?",o:["Ein Pronomen das ersetzt","Ein Pronomen das Besitz anzeigt","Ein Pronomen das fragt","Ein Pronomen das zeigt"],c:1,e:"Possessivpronomen zeigen Zugehoerigkeit: mein, dein, sein, ihr, unser, euer."},
-  {d:3,q:"Was sind Modalverben?",o:["Hilfsverben die Modus ausdruecken","Verben fuer Bewegung","Verben immer mit Infinitiv","Verben im Passiv"],c:0,e:"Modalverben: koennen, muessen, duerfen, wollen, sollen, moegen."},
-  {d:3,q:"'Er kommt trotzdem.' - Welche Wortart ist 'trotzdem'?",o:["Konjunktion","Adverb","Praepositon","Adjektiv"],c:1,e:"'trotzdem' ist ein Konjunktionaladverb - leitet keinen Nebensatz ein."}
+  {d:1,q:"Welche Wortart ist 'schnell'?",o:["Nomen","Verb","Adjektiv","Adverb"],c:2,e:"Adjektive beschreiben Eigenschaften (schneller, am schnellsten)."},
+  {d:1,q:"'laufen, denken, schlafen' sind...",o:["Nomen","Verben","Adjektive","Pronomen"],c:1,e:"Verben druecken Handlungen, Vorgaenge oder Zustaende aus."},
+  {d:1,q:"Welche Wortart ist 'weil'?",o:["Adverb","Praeposition","Konjunktion","Artikel"],c:2,e:"'weil' = subordinierende Konjunktion (leitet Nebensatz ein)."},
+  {d:1,q:"'Er' in 'Er geht weg' ist ein...",o:["Nomen","Adjektiv","Pronomen","Verb"],c:2,e:"'Er' ersetzt ein Nomen = Personalpronomen."},
+  {d:1,q:"Welche Wortart ist 'in'?",o:["Konjunktion","Praeposition","Adverb","Interjektion"],c:1,e:"Praepositionen stehen vor Nomen und geben Beziehungen an."},
+  {d:1,q:"Was ist ein Nomen?",o:["Ein Tunwort","Ein Namenswort","Ein Wiewort","Ein Fuerwort"],c:1,e:"Nomen = Namenswort: Personen, Tiere, Dinge, Begriffe. Immer grossgeschrieben."},
+  {d:1,q:"Welche Wortart ist 'sehr' in 'Er ist sehr muede'?",o:["Adjektiv","Adverb","Konjunktion","Pronomen"],c:1,e:"'sehr' verstaerkt das Adjektiv = Gradpartikel/Adverb."},
+  {d:1,q:"Was ist die Grundform des Verbs?",o:["Partizip II","Infinitiv","Imperativ","Konjunktiv"],c:1,e:"Infinitiv = Grundform: laufen, schreiben, denken."},
+  {d:1,q:"Welche Wortart ist 'und'?",o:["Praeposition","Konjunktion","Adverb","Artikel"],c:1,e:"'und' = koordinierende Konjunktion (verbindet gleichrangige Saetze/Woerter)."},
+  {d:1,q:"Welche Wortart ist 'the' auf Deutsch ('der/die/das')?",o:["Pronomen","Adjektiv","Artikel","Konjunktion"],c:2,e:"'der/die/das' = bestimmter Artikel."},
+  {d:1,q:"Was ist ein Adjektiv?",o:["Ein Tunwort","Ein Eigenschaftswort","Ein Namenswort","Ein Verbindungswort"],c:1,e:"Adjektiv = Eigenschaftswort: gross, klein, schoen, schnell."},
+  {d:1,q:"'Hund, Freiheit, Tisch' sind...",o:["Verben","Adjektive","Nomen","Adverbien"],c:2,e:"Nomen = Namenswoerter (immer gross)."},
+  {d:1,q:"Welche Wortart ist 'nie' in 'Er kommt nie'?",o:["Adjektiv","Adverb","Konjunktion","Praeposition"],c:1,e:"'nie' = temporales Adverb (antwortet auf 'Wann?')."},
+  {d:1,q:"Was ist ein Verb?",o:["Ein Eigenschaftswort","Ein Tunwort/Tatigkeitswort","Ein Namenswort","Ein Verbindungswort"],c:1,e:"Verb = Tunwort: laufen, schlafen, denken."},
+  {d:1,q:"Welche Wortart ist 'aber'?",o:["Adverb","Praeposition","Konjunktion","Artikel"],c:2,e:"'aber' = koordinierende Konjunktion (Gegensatz)."},
+  {d:2,q:"Was ist ein Possessivpronomen?",o:["Fragestellendes Pronomen","Pronomen das Besitz anzeigt","Pronomen das zeigt","Ersatz-Pronomen"],c:1,e:"Possessivpronomen: mein, dein, sein, ihr, unser, euer."},
+  {d:2,q:"Welche Wortart ist 'obwohl'?",o:["Koordinierende Konj.","Subordinierende Konj.","Adverb","Praeposition"],c:1,e:"'obwohl' leitet Nebensatz ein = subordinierende Konjunktion."},
+  {d:2,q:"Was sind Modalverben?",o:["Verben die Modus ausdruecken","Bewegungsverben","Verben im Passiv","Unregelm. Verben"],c:0,e:"Modalverben: koennen, muessen, duerfen, wollen, sollen, moegen."},
+  {d:2,q:"'trotzdem' in 'Er kommt trotzdem' ist...",o:["Konjunktion","Konjunktionaladverb","Praeposition","Adjektiv"],c:1,e:"Konjunktionaladverb: verbindet wie Konj., steht aber im Hauptsatz."},
+  {d:2,q:"Was sind Hilfsverben?",o:["sein, haben, werden","koennen, muessen, duerfen","laufen, springen, rennen","denken, fuhlen, sehen"],c:0,e:"Hilfsverben (sein, haben, werden) helfen zusammengesetzte Zeitformen zu bilden."},
+  {d:2,q:"Was ist ein Demonstrativpronomen?",o:["Zeigt auf etwas Bestimmtes (dieser, jener, derselbe)","Stellt eine Frage","Zeigt Besitz an","Ersetzt unbestimmtes Nomen"],c:0,e:"Demonstrativpronomen zeigen auf Bestimmtes: dieser, jener, derselbe."},
+  {d:2,q:"Was ist ein Relativpronomen?",o:["Leitet Fragesaetze ein","Leitet Relativsaetze ein (der, die, das, welcher...)","Zeigt Besitz","Ersetzt Verb"],c:1,e:"Relativpronomen leiten Relativsaetze ein: 'der Mann, der kommt'."},
+  {d:2,q:"'Gestern' in 'Er kam gestern' ist...",o:["Adjektiv","Temporales Adverb","Konjunktion","Praeposition"],c:1,e:"'gestern' = temporales Adverb (antwortet auf 'Wann?')."},
+  {d:2,q:"Welche Woerter sind KEINE Artikel?",o:["der, die, das","ein, eine","mein, dein","und, oder, aber"],c:3,e:"'und, oder, aber' = Konjunktionen, keine Artikel."},
+  {d:3,q:"Was ist der Unterschied zwischen Adjektiv und Adverb?",o:["Kein Unterschied","Adjektiv beschreibt Nomen; Adverb beschreibt Verb/Adjektiv/Satz","Adjektiv wird dekliniert; Adverb nie","Adjektive kommen nur vor Nomen"],c:2,e:"Adjektive beziehen sich auf Nomen (das schnelle Auto). Adverbien modifizieren Verben/Adjektive (er laeuft schnell). Adjektive werden dekliniert, Adverbien nicht."},
+  {d:3,q:"Was sind Partikel?",o:["Alle unflektierbaren Woerter","Woerter wie 'ja', 'doch', 'halt', 'eigentlich'","Alle Adverbien","Alle Praepositionen"],c:1,e:"Partikel im engeren Sinne: 'ja', 'doch', 'halt', 'eigentlich' - nicht flektierbar, modifizieren Aussagen."},
+  {d:3,q:"Was ist ein Indefinitpronomen?",o:["Pronomen das immer auf etwas Bestimmtes zeigt","Unbestimmtes Pronomen (jemand, etwas, alle, niemand...)","Pronomen das fragt","Pronomen das besitzt"],c:1,e:"Indefinitpronomen = unbestimmt: jemand, etwas, alle, keiner, niemand, jeder."},
+  {d:3,q:"Welche Wortart ist 'wegen' in 'wegen des Regens'?",o:["Konjunktion","Adverb","Praeposition","Adjektiv"],c:2,e:"'wegen' ist eine Praeposition (regiert Genitiv)."},
+  {d:3,q:"Was sind trennbare Verben?",o:["Verben mit untrennbarem Praefix (be-, ver-, ent-)","Verben mit trennbarem Praefix (auf-, an-, ab-...)","Verben im Passiv","Modalverben"],c:1,e:"Trennbare Verben: aufstehen (er steht auf), anrufen (er ruft an). Das Praefix wird im Hauptsatz abgetrennt."},
+  {d:3,q:"Welche Wortart ist 'kaum' in 'Er versteht kaum Deutsch'?",o:["Adjektiv","Gradpartikel/Adverb","Konjunktion","Praeposition"],c:1,e:"'kaum' = Gradpartikel/Adverb, gibt den Grad/die Intensitat an."},
+
+  {d:1,q:"Was ist ein reflexives Verb?",o:["Verb das rueckwaerts laeuft","Verb mit Reflexivpronomen (sich waschen)","Hilfsverb","Passiv-Verb"],c:1,e:"Reflexive Verben: sich waschen, sich freuen, sich beeilen."},
+  {d:1,q:"Was ist ein transitives Verb?",o:["Verb ohne Objekt","Verb das ein Akkusativobjekt verlangt","Verb im Passiv","Hilfsverb"],c:1,e:"Transitiv = verlangt Akkusativobjekt: Er kauft das Buch."},
+  {d:1,q:"Welche Wortart ist 'heute'?",o:["Adjektiv","Temporales Adverb","Konjunktion","Praeposition"],c:1,e:"'heute' = temporales Adverb."},
+  {d:1,q:"Welche Wortart ist 'dort'?",o:["Adjektiv","Lokales Adverb","Konjunktion","Praeposition"],c:1,e:"'dort' = lokales Adverb."},
+  {d:1,q:"Welche Wortart ist 'deshalb'?",o:["Konjunktion","Konjunktionaladverb","Praeposition","Adjektiv"],c:1,e:"'deshalb' = Konjunktionaladverb."},
+  {d:2,q:"Was ist der Unterschied zwischen 'weil' und 'deshalb'?",o:["Kein Unterschied","'weil' leitet Nebensatz ein; 'deshalb' bleibt im Hauptsatz","'weil' ist formal","'deshalb' leitet Nebensatz ein"],c:1,e:"Ich bleibe zu Hause, weil ich krank bin. vs. Ich bin krank, deshalb bleibe ich zu Hause."},
+  {d:2,q:"Was ist ein Numerale?",o:["Ein Nomen","Ein Zahlwort (ein, zwei, erst...)","Ein Adjektiv","Ein Verb"],c:1,e:"Numerale = Zahlwort: Kardinalzahlen (1,2) und Ordinalzahlen (erst, zweit)."},
+  {d:2,q:"Was ist eine Interjektion?",o:["Ein Verb","Ein Ausrufsewort (ach, oh, pfui)","Ein Adjektiv","Eine Konjunktion"],c:1,e:"Interjektion: ach, oh, pfui, bravo, autsch."},
+  {d:3,q:"Was ist ein Partizip I?",o:["Verb im Passiv","Verb als Adjektiv/Adverb (laufend, singend)","Partizip II","Infinitiv"],c:1,e:"Partizip I = Verb + -end: laufend, singend, lachendes Kind."},
+  {d:3,q:"Was ist ein Gerundiv?",o:["Partizip I","Partizip mit passivischem Sinn (die zu loesende Aufgabe)","Reflexivpronomen","Hilfsverb"],c:1,e:"Gerundiv = 'die zu loesende Aufgabe' - drueckt Notwendigkeit aus."},
+  {d:3,q:"Was ist der Unterschied zwischen Praefix und Praeposition?",o:["Kein Unterschied","Praefix steht vor Verb; Praeposition vor Nomengruppe","Praefix = gross","Praefix = Verb"],c:1,e:"Praefix: 'vor-' in 'vorangehen'. Praeposition: 'vor dem Haus'."},
+
 ],
 "wortschatz":[
-  {d:1,q:"Was bedeutet 'melancholisch'?",o:["froehlich","schwermuetig und traurig","aufgeregt","gelassen"],c:1,e:"Melancholisch = schwermuetig, von tiefer Traurigkeit gepraegt."},
-  {d:1,q:"Was bedeutet 'eloquent'?",o:["schweigsam","redegewandt","laut","unhoeflich"],c:1,e:"Eloquent = redegewandt, sich gut ausdruecken koennen."},
-  {d:1,q:"Was ist ein Synonym fuer 'beginnen'?",o:["enden","starten","stoppen","wiederholen"],c:1,e:"Synonyme: starten, anfangen, anbrechen, loslegen."},
-  {d:1,q:"Was bedeutet 'praezise'?",o:["ungenau","genau und exakt","langsam","kreativ"],c:1,e:"Praezise = exakt, genau, auf den Punkt gebracht."},
-  {d:2,q:"Was ist das Gegenteil von 'erheblich'?",o:["betraechtlich","bedeutend","geringfuegig","immens"],c:2,e:"'geringfuegig' ist das Antonym zu 'erheblich'."},
-  {d:2,q:"Was bedeutet 'ambivalent'?",o:["eindeutig","zwiespaetig / widerspruchsvoll","freundlich","entschieden"],c:1,e:"Ambivalent = zwiespaetig, widerspruchsvolle Gefuehle gleichzeitig habend."},
-  {d:2,q:"Was bedeutet 'konsekutiv'?",o:["gleichzeitig","aufeinanderfolgend","gegensaetzlich","zufaellig"],c:1,e:"Konsekutiv = aufeinanderfolgend, in Folge."},
-  {d:3,q:"Welches Wort passt NICHT zur Gruppe? suffisant / haemisch / mokant / aufrichtig",o:["suffisant","haemisch","mokant","aufrichtig"],c:3,e:"suffisant, haemisch, mokant = spoettisch. 'aufrichtig' ist das Gegenteil."},
-  {d:3,q:"Was bedeutet 'lapidar'?",o:["ausfuehrlich","kurz und praegnant formuliert","mehrdeutig","feierlich"],c:1,e:"Lapidar = knapp und treffend formuliert, ohne viele Worte."},
-  {d:3,q:"Was bedeutet 'solitaer'?",o:["gesellig","allein/einzeln","farbig","freundlich"],c:1,e:"Solitaer = allein, einzeln, fuer sich stehend."}
+  {d:1,q:"Was bedeutet 'melancholisch'?",o:["froehlich","schwermuetig/traurig","aufgeregt","mutig"],c:1,e:"Melancholisch = von tiefer Traurigkeit gepraegt."},
+  {d:1,q:"Was bedeutet 'eloquent'?",o:["schweigsam","redegewandt","laut","unhoefllich"],c:1,e:"Eloquent = redegewandt."},
+  {d:1,q:"Was bedeutet 'praezise'?",o:["ungenau","genau und exakt","langsam","kreativ"],c:1,e:"Praezise = exakt, auf den Punkt gebracht."},
+  {d:1,q:"Was ist ein Synonym fuer 'beginnen'?",o:["enden","starten","stoppen","wiederholen"],c:1,e:"Synonyme: starten, anfangen, anbrechen."},
+  {d:1,q:"Was bedeutet 'anonym'?",o:["beruehmt","unbekannt/namenlos","freundlich","alleine"],c:1,e:"Anonym = namenlos, unbekannt."},
+  {d:1,q:"Was bedeutet 'flexibel'?",o:["starr","anpassungsfaehig","schwach","teuer"],c:1,e:"Flexibel = anpassungsfaehig."},
+  {d:1,q:"Was ist ein Antonym fuer 'gross'?",o:["riesig","gigantisch","klein","weit"],c:2,e:"Antonym = Gegenteil. Gross <-> klein."},
+  {d:1,q:"Was bedeutet 'global'?",o:["lokal","weltweit","einmalig","zeitlich"],c:1,e:"Global = weltweit."},
+  {d:1,q:"Was bedeutet 'modern'?",o:["veraltet","zeitgemaess/aktuell","langsam","gross"],c:1,e:"Modern = zeitgemaess, dem aktuellen Stil entsprechend."},
+  {d:1,q:"Was ist ein Synonym fuer 'schnell'?",o:["langsam","zack","rasch","stet"],c:2,e:"Synonyme fuer schnell: rasch, flink, zuegig."},
+  {d:1,q:"Was bedeutet 'neugierig'?",o:["desinteressiert","wissbegierig/interessiert","aengstlich","mude"],c:1,e:"Neugierig = wissbegierig, interessiert an Neuem."},
+  {d:1,q:"Was ist ein Synonym fuer 'sprechen'?",o:["hoeren","reden","schreiben","denken"],c:1,e:"Synonyme fuer sprechen: reden, sagen, aeussern."},
+  {d:1,q:"Was bedeutet 'ruhig'?",o:["laut","leise/still","aufgeregt","schnell"],c:1,e:"Ruhig = still, ohne Larm, gelassen."},
+  {d:1,q:"Was ist ein Antonym fuer 'traurig'?",o:["weinend","froehlich","still","mude"],c:1,e:"Antonym = Gegenteil. Traurig <-> froehlich."},
+  {d:1,q:"Was bedeutet 'kreativ'?",o:["langweilig","fantasielos","einfallsreich","ordentlich"],c:2,e:"Kreativ = einfallsreich, schopferisch."},
+  {d:2,q:"Was bedeutet 'ambivalent'?",o:["eindeutig","zwiespaeltig","freundlich","entschieden"],c:1,e:"Ambivalent = gleichzeitig positive und negative Gefuehle."},
+  {d:2,q:"Was bedeutet 'konsekutiv'?",o:["gleichzeitig","aufeinanderfolgend","gegensaetzlich","zufaellig"],c:1,e:"Konsekutiv = aufeinanderfolgend."},
+  {d:2,q:"Was bedeutet 'ephemer'?",o:["dauerhaft","vergaenglich","laut","selten"],c:1,e:"Ephemer = vergaenglich, kurzlebig."},
+  {d:2,q:"Was ist ein Synonym fuer 'hartnäckig'?",o:["nachgiebig","beharrlich","zerstreut","gleichgueltig"],c:1,e:"Hartnäckig = beharrlich, standhaft."},
+  {d:2,q:"Was bedeutet 'kongruent'?",o:["widerspruechlich","uebereinstimmend","zufaellig","getrennt"],c:1,e:"Kongruent = uebereinstimmend, deckungsgleich."},
+  {d:2,q:"Was ist ein Synonym fuer 'Angst'?",o:["Mut","Furcht","Freude","Stille"],c:1,e:"Synonyme fuer Angst: Furcht, Schrecken, Beklemmung."},
+  {d:2,q:"Was bedeutet 'subtil'?",o:["offensichtlich","fein/kaum wahrnehmbar","laut","grob"],c:1,e:"Subtil = fein, kaum wahrnehmbar, schwer zu fassen."},
+  {d:2,q:"Was ist das Gegenteil von 'optimistisch'?",o:["froehlich","hoffnungsvoll","pessimistisch","aktiv"],c:2,e:"Pessimistisch = das Gegenteil von optimistisch."},
+  {d:2,q:"Was bedeutet 'authentisch'?",o:["falsch/kuenstlich","echt/ursprunglich","bekannt","modern"],c:1,e:"Authentisch = echt, urspruenglich, nicht gefaelscht."},
+  {d:2,q:"Was ist ein Oberbegriff fuer 'Hund, Katze, Hamster'?",o:["Tiere","Haustiere","Saeugetiere","Lebewesen"],c:1,e:"Der naechste Oberbegriff (Hyperonym) ist 'Haustiere'."},
+  {d:3,q:"Was bedeutet 'lapidar'?",o:["ausfuehrlich","kurz und praegnant","mehrdeutig","feierlich"],c:1,e:"Lapidar = knapp und treffend (lat. lapidarius)."},
+  {d:3,q:"Was bedeutet 'pekuniaer'?",o:["persoenlich","finanziell","raeumlich","zeitlich"],c:1,e:"Pekuniaer (lat. pecunia) = geldlich, finanziell."},
+  {d:3,q:"Was bedeutet 'Tautologie'?",o:["Fremdwort","bedeutungsgleiche Wiederholung","Ironie","logischer Schluss"],c:1,e:"Tautologie = sinnlose Dopplung: 'weisser Schimmel'."},
+  {d:3,q:"Was bedeutet 'diametral' in 'diametral entgegengesetzt'?",o:["leicht","voellig/genau","teilweise","kaum"],c:1,e:"Diametral = durch den Durchmesser (Diameter) = voellig, komplett entgegengesetzt."},
+  {d:3,q:"Was ist ein 'Pleonasmus'?",o:["Fachbegriff","sinnlose Bedeutungsverdopplung","Fremdwort","rhetorische Frage"],c:1,e:"Pleonasmus = 'alter Greis', 'weisser Schimmel' - bereits in einem Wort enthalten."},
+  {d:3,q:"Was bedeutet 'penibel'?",o:["sorglos","aeusserst genau/peinlich genau","kreativ","schnell"],c:1,e:"Penibel = uebertrieben genau, pingelig."},
+  {d:3,q:"Was ist der Unterschied zwischen 'Synonym' und 'Homonym'?",o:["Kein Unterschied","Synonym = gleiche Bedeutung; Homonym = gleiche Form, verschiedene Bedeutung","Synonym = Fachbegriff; Homonym = Alltagsbegriff","Synonym = Nomen; Homonym = Verb"],c:1,e:"Synonym: gleichbedeutend (gross/riesig). Homonym: gleichklingend, verschiedene Bedeutung (der Schloss = Schloss am Haus ODER Schloss = Burg)."},
+  {d:3,q:"Was bedeutet 'sarkastisch'?",o:["lustig und freundlich","beissend/verletzend spottend","direkt und ehrlich","leise und schuchtern"],c:1,e:"Sarkastisch = bitterer, verletzender Spott (staerker als Ironie)."},
+
+  {d:1,q:"Was bedeutet 'vergaenglich'?",o:["dauerhaft","kurzlebig/nicht ewig","stark","gross"],c:1,e:"Vergaenglich = nicht ewig, kurzlebig."},
+  {d:1,q:"Was ist ein Synonym fuer 'sagen'?",o:["hoeren","aeussern","schreiben","lesen"],c:1,e:"Synonyme: aeussern, erwaehnen, sprechen."},
+  {d:2,q:"Was ist ein Hyperonym fuer 'Apfel, Birne, Pflaume'?",o:["Gemuese","Obst","Pflanzen","Suesses"],c:1,e:"Hyperonym = Oberbegriff: alle sind Obst."},
+  {d:2,q:"Was ist ein Hyponym fuer 'Fahrzeug'?",o:["Transport","Fortbewegung","Auto","Bewegung"],c:2,e:"Hyponym = Unterbegriff: Auto ist ein Fahrzeug."},
+  {d:2,q:"Was bedeutet 'pragmatisch'?",o:["theoretisch","praktisch denkend","langsam","emotional"],c:1,e:"Pragmatisch = auf praktische Loesungen ausgerichtet."},
+  {d:2,q:"Was bedeutet 'banal'?",o:["schwierig","alltaeglich/nichtssagend","interessant","komplex"],c:1,e:"Banal = nichtssagend, oberflaechlich."},
+  {d:3,q:"Was ist der Unterschied zwischen 'moralisch' und 'ethisch'?",o:["Kein Unterschied","Moral = gelebte Normen; Ethik = Wissenschaft die Moral untersucht","Moralisch = gut; Ethisch = boese","Beide sind gleich"],c:1,e:"Moral = Normen einer Gesellschaft. Ethik = wissenschaftliche Reflexion darueber."},
+  {d:3,q:"Was ist eine 'Metapher'?",o:["Direkter Vergleich mit 'wie'","Uebertragene Bedeutung ohne Vergleichswort","Wortwiederholung","Gegensatz"],c:1,e:"Metapher: 'Das Leben ist eine Reise.' (kein 'wie')."},
+  {d:3,q:"Was bedeutet 'konnotativ'?",o:["Woertliche Bedeutung","Mitgemeinte/emotionale Begleitbedeutung","Grammatikalisch","Selten"],c:1,e:"Konnotation = emotionale Begleitbedeutung (z.B. 'Schlange' = positiv im Maerchen, negativ sonst)."},
+
 ],
 "zeitformen":[
   {d:1,q:"'Ich spielte gestern Fussball.' - Welche Zeitform?",o:["Praesens","Praeteritum","Perfekt","Plusquamperfekt"],c:1,e:"Praeteritum = einfache Vergangenheit."},
   {d:1,q:"'Er hat gegessen.' - Welche Zeitform?",o:["Praesens","Praeteritum","Perfekt","Futur I"],c:2,e:"Perfekt = haben/sein + Partizip II."},
-  {d:1,q:"'Sie wird kommen.' - Welche Zeitform?",o:["Praesens","Futur I","Futur II","Konjunktiv"],c:1,e:"Futur I = werden + Infinitiv. Drueckt Zukunftiges aus."},
-  {d:1,q:"Was ist die Grundform des Verbs?",o:["Partizip","Infinitiv","Imperativ","Konjunktiv"],c:1,e:"Der Infinitiv ist die Grundform (laufen, schreiben, denken)."},
-  {d:2,q:"'Als ich ankam, hatte er schon gegessen.' - 'hatte gegessen' ist?",o:["Perfekt","Praeteritum","Plusquamperfekt","Futur II"],c:2,e:"Plusquamperfekt = Vorvergangenheit. Was VOR einem anderen vergangenen Ereignis geschah."},
-  {d:2,q:"Welche Zeitform wird in Romanen und Berichten bevorzugt?",o:["Perfekt","Praeteritum","Futur I","Plusquamperfekt"],c:1,e:"Das Praeteritum ist die typische Erzaehlzeit in der Schriftsprache."},
-  {d:2,q:"'Er wird gegessen haben.' - Welche Zeitform?",o:["Futur I","Futur II","Perfekt","Plusquamperfekt"],c:1,e:"Futur II = werden + Partizip II + haben/sein. In Zukunft abgeschlossene Handlung."},
-  {d:3,q:"'Waere er frueher gekommen, haette er sie angetroffen' - Welche Form?",o:["Plusquamperfekt","Konjunktiv II Plusquamperfekt","Futur II","Konjunktiv I Perfekt"],c:1,e:"Irreale Bedingungssaetze in der Vergangenheit: Konjunktiv II des Plusquamperfekts."},
-  {d:3,q:"'Er sagt, er komme morgen.' - 'komme' ist welche Form?",o:["Indikativ Praesens","Konjunktiv I Praesens","Konjunktiv II Praesens","Imperativ"],c:1,e:"In indirekter Rede wird Konjunktiv I verwendet: er komme, er habe, er sei."}
+  {d:1,q:"'Sie wird kommen.' - Welche Zeitform?",o:["Praesens","Futur I","Futur II","Konjunktiv"],c:1,e:"Futur I = werden + Infinitiv."},
+  {d:1,q:"'Er schlaeft.' - Welche Zeitform?",o:["Praesens","Praeteritum","Perfekt","Futur I"],c:0,e:"Praesens = Gegenwart (er schlaeft gerade)."},
+  {d:1,q:"Was ist der Infinitiv?",o:["Partizip II","Die Grundform des Verbs","Imperativ","Konjunktiv"],c:1,e:"Infinitiv = Grundform: laufen, schreiben."},
+  {d:1,q:"In welcher Zeitform erzaehlt man Maerchen?",o:["Praesens","Praeteritum","Futur I","Perfekt"],c:1,e:"Maerchen und Erzaehltexte: typischerweise Praeteritum."},
+  {d:1,q:"'Er hat geschlafen.' - Was ist 'geschlafen'?",o:["Infinitiv","Partizip II","Partizip I","Imperativ"],c:1,e:"'geschlafen' = Partizip II von 'schlafen'."},
+  {d:1,q:"Wie bildet man das Perfekt?",o:["haben/sein + Infinitiv","haben/sein + Partizip II","werden + Infinitiv","haben + Konjunktiv"],c:1,e:"Perfekt = haben oder sein + Partizip II."},
+  {d:1,q:"'Lauf!' ist welche Verbform?",o:["Infinitiv","Imperativ","Konjunktiv","Partizip"],c:1,e:"Imperativ = Befehlsform. 'Lauf!' = Aufforderung."},
+  {d:1,q:"Wie lautet die Praeteritumsform von 'gehen'?",o:["gehte","ging","geging","gegangen"],c:1,e:"'gehen' ist unregelmaessig: er ging (Praeteritum)."},
+  {d:1,q:"Wie lautet das Partizip II von 'laufen'?",o:["laufend","gelaufen","gelaeuft","lief"],c:1,e:"Partizip II von 'laufen' = gelaufen (mit ge- und -en)."},
+  {d:1,q:"Was ist das Futur I?",o:["werden + Infinitiv","haben + Partizip II","werden + Partizip II","sein + Infinitiv"],c:0,e:"Futur I = werden + Infinitiv: Er wird kommen."},
+  {d:1,q:"'Er schrieb einen Brief.' - Welche Zeitform?",o:["Praesens","Praeteritum","Perfekt","Futur"],c:1,e:"'schrieb' = Praeteritum von 'schreiben'."},
+  {d:2,q:"'Als ich ankam, hatte er schon gegessen.' - 'hatte gegessen' ist...",o:["Perfekt","Praeteritum","Plusquamperfekt","Futur II"],c:2,e:"Plusquamperfekt = Vorvergangenheit."},
+  {d:2,q:"Welche Zeitform wird in der Schriftsprache bevorzugt?",o:["Perfekt","Praeteritum","Futur I","Plusquamperfekt"],c:1,e:"Praeteritum = Schreibsprache. Perfekt = Alltagssprache."},
+  {d:2,q:"'Er wird gegessen haben.' - Welche Zeitform?",o:["Futur I","Futur II","Perfekt","Plusquamperfekt"],c:1,e:"Futur II = wird + Partizip II + haben/sein."},
+  {d:2,q:"Was ist der Unterschied zwischen Perfekt und Praeteritum?",o:["Kein Unterschied","Praeteritum = Erzaehlung/schriftlich; Perfekt = gesprochene Vergangenheit","Perfekt = laenger","Praeteritum = immer falsch"],c:1,e:"Praeteritum = Erzaehltexte. Perfekt = Alltagssprache."},
+  {d:2,q:"Welche Verben bilden Perfekt mit 'sein'?",o:["Transitive Verben","Intransitive Bewegungsverben und Zustandsaenderungen","Alle Verben","Reflexive Verben"],c:1,e:"'sein' + Perfekt: laufen (ist gelaufen), kommen (ist gekommen), einschlafen (ist eingeschlafen)."},
+  {d:2,q:"'Er ist eingeschlafen.' - Warum 'ist' statt 'hat'?",o:["Zufaellig","Weil 'einschlafen' eine Zustandsaenderung ist","Weil es Imperativ ist","Weil es unregelmaessig ist"],c:1,e:"Zustandsaenderungsverben (einschlafen, aufwachen, sterben) bilden Perfekt mit 'sein'."},
+  {d:2,q:"Forme ins Praeteritum: 'Er schreibt einen Brief.'",o:["Er schrieb einen Brief.","Er schriebte einen Brief.","Er hat einen Brief geschrieben.","Er wird einen Brief schreiben."],c:0,e:"Praeteritum von 'schreiben' = schrieb (unregelmaessig)."},
+  {d:2,q:"Was ist das Plusquamperfekt?",o:["Zukunft","Vergangenheit vor einer anderen Vergangenheit","Gegenwart","Weiterfuehrendes Praesens"],c:1,e:"Plusquamperfekt = Vorvergangenheit: hatte gemacht, war gegangen."},
+  {d:2,q:"Forme ins Perfekt: 'Er lief schnell.'",o:["Er hat schnell laufen.","Er ist schnell gelaufen.","Er hat schnell gelaufen.","Er lauft schnell."],c:1,e:"'laufen' bildet Perfekt mit 'sein' (Bewegungsverb): er ist gelaufen."},
+  {d:3,q:"'Waere er frueher gekommen, haette er sie angetroffen.' - Welche Form?",o:["Plusquamperfekt","Konjunktiv II Plusquamperfekt","Futur II","Konjunktiv I Perfekt"],c:1,e:"Irrealer Konditionalsatz Vergangenheit = Konjunktiv II des Plusquamperfekts."},
+  {d:3,q:"'Er sagt, er komme morgen.' - 'komme' ist...",o:["Indikativ Praesens","Konjunktiv I Praesens","Konjunktiv II","Imperativ"],c:1,e:"'komme' = Konjunktiv I in indirekter Rede."},
+  {d:3,q:"Was ist der Konjunktiv II?",o:["Wirklichkeitsform","Moeglichkeits-/Irrealisform (er kaeme, er haette)","Befehlsform","Zukunftsform"],c:1,e:"Konjunktiv II drueckt Unwirkliches, Hypothetisches aus: 'Wenn ich Zeit haette, wuerde ich kommen.'"},
+  {d:3,q:"'Er wird die Arbeit erledigt haben.' - Welche Zeitform?",o:["Futur I","Futur II","Perfekt","Plusquamperfekt"],c:1,e:"Futur II = Zukuenftig Abgeschlossenes: wird + Partizip II + haben/sein."},
+  {d:3,q:"In welcher Zeitform steht: 'Wenn ich das gewusst haette, waere ich nicht gegangen.'?",o:["Praeteritum","Plusquamperfekt Indikativ","Konjunktiv II Plusquamperfekt","Konjunktiv I Perfekt"],c:2,e:"'haette gewusst / waere gegangen' = Konjunktiv II des Plusquamperfekts (irreal, Vergangenheit)."},
+  {d:3,q:"Welcher Satz steht im Passiv?",o:["Er schreibt den Brief.","Der Brief wird geschrieben.","Er hat den Brief geschrieben.","Er wird den Brief schreiben."],c:1,e:"Passiv = werden + Partizip II: 'Der Brief wird geschrieben.' (Subjekt erleidet die Handlung)."},
+
+  {d:1,q:"'Er geht.' - Forme ins Praeteritum.",o:["Er gehte.","Er ging.","Er gegangen.","Er wird gehen."],c:1,e:"'gehen' ist unregelmaessig: Praeteritum = ging."},
+  {d:1,q:"Wie bildet man das Praeteritum bei schwachen Verben?",o:["Verb + -te/-ten","Vokalwechsel","werden + Infinitiv","haben + Partizip II"],c:0,e:"Schwache Verben: Stamm + -te: lebte, spielte."},
+  {d:2,q:"Was ist der Konjunktiv II?",o:["Wirklichkeitsform","Moeglichkeits-/Irrealisform","Befehlsform","Zukunftsform"],c:1,e:"Konjunktiv II: Wenn ich Zeit haette, kaeme ich."},
+  {d:2,q:"Wie bildet man Passiv Praesens?",o:["haben + Partizip II","werden + Partizip II","sein + Partizip II","werden + Infinitiv"],c:1,e:"Passiv Praesens: werden + Partizip II. 'Das Buch wird gelesen.'"},
+  {d:3,q:"'Das Buch wurde gelesen.' - Welche Passivform?",o:["Passiv Praesens","Passiv Praeteritum","Passiv Perfekt","Passiv Futur"],c:1,e:"'wurde gelesen' = Passiv Praeteritum."},
+  {d:3,q:"Vorgangspassiv vs. Zustandspassiv?",o:["Kein Unterschied","Vorgang = werden (Aktion); Zustand = sein (Ergebnis)","Vorgang = Vergangenheit","Vorgang = transitiv"],c:1,e:"'Das Buch wird gelesen' (Aktion). 'Das Buch ist gelesen' (Zustand/Ergebnis)."},
+
 ],
 "fremdwoerter":[
-  {d:1,q:"Was bedeutet 'global'?",o:["lokal","weltweit","einmalig","zeitlich"],c:1,e:"Global (lat. globus = Kugel) = weltweit, die ganze Erde betreffend."},
-  {d:1,q:"Was bedeutet 'flexibel'?",o:["starr","anpassungsfaehig","schwach","organisiert"],c:1,e:"Flexibel (lat. flectere = biegen) = biegsam, anpassungsfaehig."},
-  {d:1,q:"Was bedeutet 'komplex'?",o:["einfach","vielschichtig/kompliziert","schnell","teuer"],c:1,e:"Komplex = aus vielen Teilen bestehend, vielschichtig."},
-  {d:2,q:"Was bedeutet 'kontrar'?",o:["aehnlich","entgegengesetzt","parallel","ergaenzend"],c:1,e:"Kontrar = entgegengesetzt, gegensaetzlich."},
-  {d:2,q:"Was ist ein 'Protagonist'?",o:["Gegenspieler","Hauptfigur","Erzaehler","Nebenfigur"],c:1,e:"Protagonist (gr. protos = erster) = Hauptfigur."},
-  {d:2,q:"Was bedeutet 'Synonym'?",o:["Gegenteil","bedeutungsgleiches Wort","Fremdwort","zusammengesetztes Wort"],c:1,e:"Synonym = ein Wort mit gleicher oder aehnlicher Bedeutung."},
-  {d:3,q:"Was bedeutet 'tautologisch'?",o:["widerspruchsvoll","dasselbe mit anderen Worten sagen","bedeutungslos","fremdsprachig"],c:1,e:"Tautologisch = eine Aussage die sich selbst wiederholt (z.B. 'weisser Schimmel')."},
-  {d:3,q:"Was ist ein Pleonasmus?",o:["Verwendung von Fremdwoertern","sinnlose Verdopplung von Bedeutung","Stilmittel der Ironie","grammatischer Fehler"],c:1,e:"Pleonasmus = bedeutungsgleiche Verdopplung: 'alter Greis', 'weisser Schimmel'."},
-  {d:3,q:"Was bedeutet 'solitaer'?",o:["gesellig","allein/einzeln","farbig","freundlich"],c:1,e:"Solitaer = allein, einzeln."}
+  {d:1,q:"Was bedeutet 'global'?",o:["lokal","weltweit","einmalig","zeitlich"],c:1,e:"Global (lat. globus) = weltweit."},
+  {d:1,q:"Was bedeutet 'flexibel'?",o:["starr","anpassungsfaehig","schwach","teuer"],c:1,e:"Flexibel = anpassungsfaehig."},
+  {d:1,q:"Was bedeutet 'komplex'?",o:["einfach","vielschichtig","schnell","guenstig"],c:1,e:"Komplex = aus vielen Teilen bestehend, schwierig."},
+  {d:1,q:"Was bedeutet 'Protagonist'?",o:["Gegenspieler","Hauptfigur","Erzaehler","Nebenfigur"],c:1,e:"Protagonist (gr.) = Hauptfigur."},
+  {d:1,q:"Was bedeutet 'Synonym'?",o:["Gegenteil","bedeutungsgleiches Wort","Fremdwort","Oberbegriff"],c:1,e:"Synonym = Wort mit gleicher Bedeutung."},
+  {d:1,q:"Was bedeutet 'Antonym'?",o:["Synonym","Gegenteil","Fremdwort","Oberbegriff"],c:1,e:"Antonym = Wort mit gegenteiliger Bedeutung."},
+  {d:1,q:"Was bedeutet 'anonym'?",o:["beruehmt","namenlos/unbekannt","freundlich","alleine"],c:1,e:"Anonym (gr.) = namenlos."},
+  {d:1,q:"Was bedeutet 'kreativ'?",o:["langweilig","einfallsreich","ordentlich","laut"],c:1,e:"Kreativ = einfallsreich, schopferisch."},
+  {d:1,q:"Was bedeutet 'aktiv'?",o:["passiv/untaetig","taetig/handelnd","langsam","ruhig"],c:1,e:"Aktiv = taetig, handelnd (Gegenteil: passiv)."},
+  {d:1,q:"Was bedeutet 'direkt'?",o:["umstaendlich","gerade/unmittelbar","langsam","schwierig"],c:1,e:"Direkt = gerade, unmittelbar, ohne Umweg."},
+  {d:1,q:"Was bedeutet 'normal'?",o:["seltsam","regelmaessig/ueblich","gross","klein"],c:1,e:"Normal = regelmaessig, dem Standard entsprechend."},
+  {d:1,q:"Was bedeutet 'produktiv'?",o:["uneffektiv","viel leistend/ergiebig","faul","laut"],c:1,e:"Produktiv = viel leistend, ergiebig."},
+  {d:2,q:"Was bedeutet 'kontraer'?",o:["aehnlich","entgegengesetzt","parallel","ergaenzend"],c:1,e:"Kontraer = entgegengesetzt."},
+  {d:2,q:"Was bedeutet 'Tautologie'?",o:["Fremdwort","bedeutungsgleiche Wiederholung","Ironie","Schluss"],c:1,e:"Tautologie = 'weisser Schimmel', 'runder Kreis'."},
+  {d:2,q:"Was bedeutet 'solitaer'?",o:["gesellig","allein/einzeln","farbig","freundlich"],c:1,e:"Solitaer = allein, einzeln."},
+  {d:2,q:"Was ist ein 'Pleonasmus'?",o:["Fachbegriff","sinnlose Bedeutungsverdopplung","Fremdwort","Frage"],c:1,e:"Pleonasmus = 'alter Greis' - Dopplung gleicher Bedeutung."},
+  {d:2,q:"Was bedeutet 'subtil'?",o:["offensichtlich","kaum wahrnehmbar/fein","laut","grob"],c:1,e:"Subtil = fein, kaum wahrnehmbar."},
+  {d:2,q:"Was bedeutet 'naiv'?",o:["klug/erfahren","arglos/unkritisch","boese","mutig"],c:1,e:"Naiv = arglos, unkritisch, kindlich-unbedarft."},
+  {d:2,q:"Was bedeutet 'permanent'?",o:["zeitweise","dauerhaft/andauernd","selten","groß"],c:1,e:"Permanent = dauerhaft, stet (lat. permanere = bleiben)."},
+  {d:2,q:"Was bedeutet 'transparent'?",o:["undurchsichtig","durchsichtig/klar","dunkel","laut"],c:1,e:"Transparent = durchsichtig, klar erkennbar."},
+  {d:2,q:"Was bedeutet 'relevant'?",o:["unwichtig","bedeutsam/wichtig","selten","teuer"],c:1,e:"Relevant = bedeutsam, wichtig (lat. relevare = aufheben)."},
+  {d:3,q:"Was bedeutet 'tautologisch'?",o:["widerspruchsvoll","dasselbe mit anderen Worten","bedeutungslos","fremdsprachig"],c:1,e:"Tautologisch = dasselbe zweimal gesagt."},
+  {d:3,q:"Was bedeutet 'pekuniaer'?",o:["persoenlich","finanziell","raeumlich","zeitlich"],c:1,e:"Pekuniaer (lat. pecunia) = geldlich."},
+  {d:3,q:"Was bedeutet 'kongruent'?",o:["widerspruechlich","uebereinstimmend","zufaellig","getrennt"],c:1,e:"Kongruent = deckungsgleich, uebereinstimmend."},
+  {d:3,q:"Was bedeutet 'diametral'?",o:["leicht","voellig/genau (entgegengesetzt)","teilweise","kaum"],c:1,e:"Diametral = voellig, durch den Durchmesser: 'diametral entgegengesetzt'."},
+  {d:3,q:"Was ist das Gegenteil von 'explizit'?",o:["direkt","implizit","klar","deutlich"],c:1,e:"Explizit = ausdruecklich genannt. Implizit = nicht direkt gesagt, muss erschlossen werden."},
+  {d:3,q:"Was bedeutet 'redundant'?",o:["fehlend","ueberfluessig/doppelt","notwendig","selten"],c:1,e:"Redundant = ueberfluessig, schon Gesagtes wiederholend."},
+  {d:3,q:"Was bedeutet 'ambiguoes'?",o:["eindeutig","mehrdeutig/zweideutig","klar","einfach"],c:1,e:"Ambiguoes = mehrdeutig, zweideutig (lat. ambiguus)."},
+  {d:3,q:"Was bedeutet 'eloquent'?",o:["schweigsam","redegewandt","laut","direkt"],c:1,e:"Eloquent = redegewandt, sich gewandt ausdrücken koennen."}
 ],
 "kuckuckseier":[
-  {d:1,q:"Welches Wort passt NICHT? Apfel / Birne / Karotte / Pflaume",o:["Apfel","Birne","Karotte","Pflaume"],c:2,e:"Karotte ist Gemuese, alle anderen sind Fruechte."},
-  {d:1,q:"Welches Wort passt NICHT? Rot / Blau / Gruen / Hoch",o:["Rot","Blau","Gruen","Hoch"],c:3,e:"'Hoch' ist keine Farbe, sondern ein Adjektiv fuer Hoehe."},
-  {d:1,q:"Welches Wort passt NICHT? Hamburg / Muenchen / Zuerich / Berlin",o:["Hamburg","Muenchen","Zuerich","Berlin"],c:2,e:"Zuerich ist in der Schweiz. Die anderen drei sind deutsche Staedte."},
-  {d:2,q:"Welches Wort passt NICHT? singen / tanzen / pfeifen / lauschen",o:["singen","tanzen","pfeifen","lauschen"],c:3,e:"Singen, tanzen, pfeifen erzeugen Geraeusche. 'Lauschen' ist passives Hoeren."},
-  {d:2,q:"Welches Wort gehoert NICHT zur Wortfamilie? schreiben / Schrift / Schreiber / schreiend",o:["schreiben","Schrift","Schreiber","schreiend"],c:3,e:"'schreiend' gehoert zur Familie von 'schreien', nicht von 'schreiben'."},
-  {d:2,q:"Welches Wort ist KEIN Adjektiv? klug / Mut / froh / laut",o:["klug","Mut","froh","laut"],c:1,e:"'Mut' ist ein Nomen. Klug, froh und laut sind Adjektive."},
-  {d:3,q:"Welches Wort passt NICHT? Euphorie / Melancholie / Nostalgie / Geografie",o:["Euphorie","Melancholie","Nostalgie","Geografie"],c:3,e:"Euphorie, Melancholie und Nostalgie sind Gefuehlszustaende. Geografie ist eine Wissenschaft."},
-  {d:3,q:"Welches passt NICHT zum Stilmittel? Metapher / Vergleich / Allegorie / Konjunktion",o:["Metapher","Vergleich","Allegorie","Konjunktion"],c:3,e:"Metapher, Vergleich und Allegorie sind Stilmittel. Konjunktion ist eine Wortart."}
+  {d:1,q:"Welches Wort passt NICHT? Apfel / Birne / Karotte / Pflaume",o:["Apfel","Birne","Karotte","Pflaume"],c:2,e:"Karotte = Gemuese. Alle anderen = Fruechte."},
+  {d:1,q:"Welches Wort passt NICHT? Rot / Blau / Gruen / Hoch",o:["Rot","Blau","Gruen","Hoch"],c:3,e:"'Hoch' = keine Farbe."},
+  {d:1,q:"Welches Wort passt NICHT? Hamburg / Muenchen / Zuerich / Berlin",o:["Hamburg","Muenchen","Zuerich","Berlin"],c:2,e:"Zuerich liegt in der Schweiz."},
+  {d:1,q:"Welches Wort passt NICHT? Stuhl / Tisch / Bett / Gabel",o:["Stuhl","Tisch","Bett","Gabel"],c:3,e:"Gabel = Besteck. Stuhl, Tisch, Bett = Moebel."},
+  {d:1,q:"Welches Wort passt NICHT? Hund / Katze / Hamster / Adler",o:["Hund","Katze","Hamster","Adler"],c:3,e:"Adler = Vogel. Hund, Katze, Hamster = Saeugetiere."},
+  {d:1,q:"Welches Wort passt NICHT? laufen / springen / schwimmen / schlafen",o:["laufen","springen","schwimmen","schlafen"],c:3,e:"Schlafen = Ruhezustand. Die anderen = Bewegung/Sport."},
+  {d:1,q:"Welches Wort passt NICHT? Rose / Tulpe / Narzisse / Eiche",o:["Rose","Tulpe","Narzisse","Eiche"],c:3,e:"Eiche = Baum. Rose, Tulpe, Narzisse = Blumen."},
+  {d:1,q:"Welches Wort passt NICHT? Januar / Februar / Sommer / Maerz",o:["Januar","Februar","Sommer","Maerz"],c:2,e:"Sommer = Jahreszeit. Januar, Februar, Maerz = Monate."},
+  {d:1,q:"Welches Wort passt NICHT? Gitarre / Geige / Schlagzeug / Pinsel",o:["Gitarre","Geige","Schlagzeug","Pinsel"],c:3,e:"Pinsel = Malwerkzeug. Gitarre, Geige, Schlagzeug = Musikinstrumente."},
+  {d:1,q:"Welches Wort passt NICHT? Arzt / Lehrer / Ingenieur / Krankenhaus",o:["Arzt","Lehrer","Ingenieur","Krankenhaus"],c:3,e:"Krankenhaus = Gebaeude. Arzt, Lehrer, Ingenieur = Berufe."},
+  {d:1,q:"Welches Wort passt NICHT? Bach / Mozart / Beethoven / Einstein",o:["Bach","Mozart","Beethoven","Einstein"],c:3,e:"Einstein = Physiker/Wissenschaftler. Bach, Mozart, Beethoven = Komponisten."},
+  {d:1,q:"Welches Wort passt NICHT? Frankfurt / Paris / Berlin / Hamburg",o:["Frankfurt","Paris","Berlin","Hamburg"],c:1,e:"Paris liegt in Frankreich. Frankfurt, Berlin, Hamburg = deutsche Staedte."},
+  {d:2,q:"Welches Wort passt NICHT? singen / tanzen / pfeifen / lauschen",o:["singen","tanzen","pfeifen","lauschen"],c:3,e:"Lauschen = passiv hoeren. Die anderen = aktiv Geraeusche machen."},
+  {d:2,q:"Welches Wort gehoert NICHT zur Wortfamilie? schreiben / Schrift / Schreiber / schreiend",o:["schreiben","Schrift","Schreiber","schreiend"],c:3,e:"'schreiend' gehoert zu 'schreien', nicht zu 'schreiben'."},
+  {d:2,q:"Welches Wort ist KEIN Adjektiv? klug / Mut / froh / laut",o:["klug","Mut","froh","laut"],c:1,e:"'Mut' = Nomen. Klug, froh, laut = Adjektive."},
+  {d:2,q:"Welches Wort passt NICHT? Euphorie / Melancholie / Nostalgie / Geografie",o:["Euphorie","Melancholie","Nostalgie","Geografie"],c:3,e:"Geografie = Wissenschaft. Euphorie, Melancholie, Nostalgie = Gefuehlszustaende."},
+  {d:2,q:"Welches passt NICHT zum Stilmittel? Metapher / Vergleich / Allegorie / Konjunktion",o:["Metapher","Vergleich","Allegorie","Konjunktion"],c:3,e:"Konjunktion = Wortart. Metapher, Vergleich, Allegorie = Stilmittel."},
+  {d:2,q:"Welches Wort gehoert NICHT zur Familie? Freundschaft / freundlich / befreunden / friedlich",o:["Freundschaft","freundlich","befreunden","friedlich"],c:3,e:"'friedlich' gehoert zu 'Friede', nicht zu 'Freund'."},
+  {d:2,q:"Welches Wort ist KEIN Modalverb? koennen / wollen / laufen / muessen",o:["koennen","wollen","laufen","muessen"],c:2,e:"'laufen' = Vollverb. Modalverben: koennen, wollen, muessen, duerfen, sollen, moegen."},
+  {d:2,q:"Welches Wort passt NICHT zu 'Wasser'? Regen / Wolke / Fluss / Feuer",o:["Regen","Wolke","Fluss","Feuer"],c:3,e:"Feuer hat nichts mit Wasser zu tun (ist Gegenteil). Regen, Wolke, Fluss = Wasser-bezogen."},
+  {d:2,q:"Welches Wort ist KEIN Nomen? Freude / Schmerz / laufen / Gedanke",o:["Freude","Schmerz","laufen","Gedanke"],c:2,e:"'laufen' = Verb (Infinitiv). Freude, Schmerz, Gedanke = Nomen."},
+  {d:2,q:"Welches Wort passt NICHT? Nominativ / Dativ / Akkusativ / Konjunktiv",o:["Nominativ","Dativ","Akkusativ","Konjunktiv"],c:3,e:"Nominativ, Dativ, Akkusativ = Kasus. Konjunktiv = Verbmodus."},
+  {d:3,q:"Welches Wort passt NICHT zur Wortfamilie? Freiheit / frei / befreien / freilich / Freizeit / friedlich",o:["frei","befreien","friedlich","Freizeit"],c:2,e:"'friedlich' gehoert zur Familie von 'Friede', nicht von 'frei'."},
+  {d:3,q:"Welches Wort gehoert NICHT zur Gruppe der Stilmittel? Metapher / Ironie / Alliteration / Indefinitpronomen",o:["Metapher","Ironie","Alliteration","Indefinitpronomen"],c:3,e:"Indefinitpronomen = Wortart (jemand, etwas). Die anderen = Stilmittel."},
+  {d:3,q:"Welches Wort passt NICHT? Epik / Lyrik / Dramatik / Grammatik",o:["Epik","Lyrik","Dramatik","Grammatik"],c:3,e:"Epik, Lyrik, Dramatik = literarische Gattungen. Grammatik = Sprachlehre."},
+  {d:3,q:"Welches Wort ist KEIN Synonym fuer 'schoen'? huebsch / ansehnlich / garstig / attraktiv",o:["huebsch","ansehnlich","garstig","attraktiv"],c:2,e:"'garstig' = haesslich, unangenehm = Antonym von schoen."},
+  {d:3,q:"Welches Wort gehoert NICHT zu den Konjunktionen? weil / obwohl / deshalb / aber",o:["weil","obwohl","deshalb","aber"],c:2,e:"'deshalb' = Konjunktionaladverb (kein echter Nebensatz-Einleiter). Die anderen = Konjunktionen."}
 ],
 "leseverstehen1":[
-  {d:1,
-   text:"Die Biene ist eines der wichtigsten Tiere fuer den Menschen. Sie bestaubt Blumen und Obstbaeume, ohne die es kaum Fruechte und Gemuese gaebe. Eine einzige Bienenkoenigin kann bis zu 2000 Eier pro Tag legen. Arbeiterinnen sammeln Nektar und verwandeln ihn in Honig. Im Winter leben die Bienen von ihrem Honigvorrat und verlassen den Stock kaum.",
-   q:"Was ist die Hauptaufgabe der Arbeitsbienen gemaess dem Text?",
-   o:["Eier legen","Nektar sammeln und zu Honig verarbeiten","Den Stock bewachen","Die Koenigin futtern"],
-   c:1,e:"Im Text steht: Arbeiterinnen sammeln Nektar und verwandeln ihn in Honig."},
-  {d:1,
-   text:"Die Biene ist eines der wichtigsten Tiere fuer den Menschen. Sie bestaubt Blumen und Obstbaeume, ohne die es kaum Fruechte und Gemuese gaebe. Eine einzige Bienenkoenigin kann bis zu 2000 Eier pro Tag legen. Arbeiterinnen sammeln Nektar und verwandeln ihn in Honig. Im Winter leben die Bienen von ihrem Honigvorrat und verlassen den Stock kaum.",
-   q:"Was wuerde laut Text passieren, wenn es keine Bienen gaebe?",
-   o:["Es gaebe weniger Honig","Es gaebe kaum Fruechte und Gemuese","Es gaebe mehr Blumen","Die Obstbaeume wuerden schneller wachsen"],
-   c:1,e:"Der Text sagt: ohne Bienen gaebe es kaum Fruechte und Gemuese, weil Bienen die Pflanzen bestauben."},
-  {d:1,
-   text:"Max liebt es, fruehmorgens aufzustehen. Waehrend seine Familie noch schlaeft, setzt er sich an den Kuechentisch und liest. Er findet die Stille am Morgen besonders angenehm. Sein Lieblingsbuch handelt von einem Jungen, der auf einer Insel ueberleben muss. Oft ist Max so vertieft, dass er das Fruehstueck vergisst.",
-   q:"Warum steht Max fruehmorgens auf?",
-   o:["Um zu fruehstuecken","Um seiner Familie zu helfen","Um in Ruhe zu lesen","Um Sport zu machen"],
-   c:2,e:"Max steht frueh auf, weil er die Stille am Morgen mag und dann ungestoert lesen kann."},
-  {d:2,
-   text:"Seit einigen Jahren nimmt die Zahl der Elektroautos stark zu. Viele Menschen entscheiden sich fuer diese Fahrzeuge, weil sie umweltfreundlicher sind als Benzin- oder Dieselautos. Allerdings gibt es noch Herausforderungen: Die Reichweite ist begrenzt, und es fehlt an Ladestationen. Experten sind jedoch zuversichtlich, dass diese Probleme in den naechsten Jahren geloest werden.",
-   q:"Was ist laut Text ein Problem bei Elektroautos?",
-   o:["Sie sind zu teuer","Die Reichweite ist begrenzt und es fehlen Ladestationen","Sie sind lauter als normale Autos","Sie brauchen viel Oel"],
-   c:1,e:"Der Text nennt explizit: begrenzte Reichweite und fehlende Ladestationen als Herausforderungen."},
-  {d:2,
-   text:"Seit einigen Jahren nimmt die Zahl der Elektroautos stark zu. Viele Menschen entscheiden sich fuer diese Fahrzeuge, weil sie umweltfreundlicher sind als Benzin- oder Dieselautos. Allerdings gibt es noch Herausforderungen: Die Reichweite ist begrenzt, und es fehlt an Ladestationen. Experten sind jedoch zuversichtlich, dass diese Probleme in den naechsten Jahren geloest werden.",
-   q:"Welche Einstellung haben Experten laut Text gegenueber der Zukunft der Elektroautos?",
-   o:["Pessimistisch - sie glauben die Probleme bleiben","Neutral - sie sagen nichts dazu","Zuversichtlich - sie glauben die Probleme werden geloest","Skeptisch - sie raten davon ab"],
-   c:2,e:"Der Text sagt ausdruecklich: Experten sind zuversichtlich, dass die Probleme geloest werden."},
-  {d:3,
-   text:"Als Clara das erste Mal die Bibliothek betrat, wusste sie sofort: Hier gehoert sie hin. Der Geruch von alten Buechern, das leise Rauschen der Heizung, die hohen Holzregale - all das fuellte sie mit einer Ruhe, die sie sonst kaum kannte. Zu Hause war es immer laut, ihre drei Geschwister stritten sich staendig. Hier konnte sie endlich denken.",
-   q:"Warum gefaellt es Clara in der Bibliothek so gut? (Indirekte Information)",
-   o:["Weil sie dort Freunde trifft","Weil es zu Hause unruhig ist und sie hier Stille findet","Weil die Buecher kostenlos sind","Weil ihre Lehrerin sie hingeschickt hat"],
-   c:1,e:"Clara liebt die Bibliothek vor allem weil sie zu Hause (drei streitende Geschwister, immer laut) keine Ruhe findet. Diese Schlussfolgerung muss man aus dem Text erschliessen."},
-  {d:3,
-   text:"Als Clara das erste Mal die Bibliothek betrat, wusste sie sofort: Hier gehoert sie hin. Der Geruch von alten Buechern, das leise Rauschen der Heizung, die hohen Holzregale - all das fuellte sie mit einer Ruhe, die sie sonst kaum kannte. Zu Hause war es immer laut, ihre drei Geschwister stritten sich staendig. Hier konnte sie endlich denken.",
-   q:"Was sagt der Text ueber Claras Zuhause?",
-   o:["Es ist gross und komfortabel","Es ist laut wegen ihrer Geschwister","Es ist weit von der Bibliothek entfernt","Es ist ruhig und ordentlich"],
-   c:1,e:"Der Text erwaehnt direkt: 'Zu Hause war es immer laut, ihre drei Geschwister stritten sich staendig.'"}
+  {d:1,text:"Die Biene ist eines der wichtigsten Tiere fuer den Menschen. Sie bestaubt Blumen und Obstbaeume, ohne die es kaum Fruechte und Gemuese gaebe. Eine einzige Bienenkoenigin kann bis zu 2000 Eier pro Tag legen. Arbeiterinnen sammeln Nektar und verwandeln ihn in Honig. Im Winter leben die Bienen von ihrem Honigvorrat.",q:"Was ist die Hauptaufgabe der Arbeitsbienen?",o:["Eier legen","Nektar sammeln und Honig herstellen","Den Stock bewachen","Die Koenigin versorgen"],c:1,e:"Text: 'Arbeiterinnen sammeln Nektar und verwandeln ihn in Honig.'"},
+  {d:1,text:"Die Biene ist eines der wichtigsten Tiere fuer den Menschen. Sie bestaubt Blumen und Obstbaeume, ohne die es kaum Fruechte und Gemuese gaebe. Eine einzige Bienenkoenigin kann bis zu 2000 Eier pro Tag legen. Arbeiterinnen sammeln Nektar und verwandeln ihn in Honig. Im Winter leben die Bienen von ihrem Honigvorrat.",q:"Wie viele Eier legt die Bienenkoenigin pro Tag?",o:["200","2000","20","20000"],c:1,e:"Text: 'Eine einzige Bienenkoenigin kann bis zu 2000 Eier pro Tag legen.'"},
+  {d:1,text:"Die Biene ist eines der wichtigsten Tiere fuer den Menschen. Sie bestaubt Blumen und Obstbaeume, ohne die es kaum Fruechte und Gemuese gaebe. Eine einzige Bienenkoenigin kann bis zu 2000 Eier pro Tag legen. Arbeiterinnen sammeln Nektar und verwandeln ihn in Honig. Im Winter leben die Bienen von ihrem Honigvorrat.",q:"Wovon leben Bienen im Winter?",o:["Von Blumen","Von frischem Nektar","Von ihrem Honigvorrat","Von Insekten"],c:2,e:"Text: 'Im Winter leben die Bienen von ihrem Honigvorrat.'"},
+  {d:1,text:"Max liebt es fruehmorgens aufzustehen. Waehrend seine Familie noch schlaeft, setzt er sich an den Kuechentisch und liest. Er findet die Stille am Morgen besonders angenehm. Sein Lieblingsbuch handelt von einem Jungen der auf einer Insel ueberleben muss. Oft ist Max so vertieft dass er das Fruehstueck vergisst.",q:"Warum steht Max fruehmorgens auf?",o:["Um zu fruehstuecken","Um zu helfen","Um in Ruhe zu lesen","Um Sport zu machen"],c:2,e:"Max liebt die morgendliche Stille zum Lesen."},
+  {d:1,text:"Max liebt es fruehmorgens aufzustehen. Waehrend seine Familie noch schlaeft, setzt er sich an den Kuechentisch und liest. Er findet die Stille am Morgen besonders angenehm. Sein Lieblingsbuch handelt von einem Jungen der auf einer Insel ueberleben muss. Oft ist Max so vertieft dass er das Fruehstueck vergisst.",q:"Was passiert manchmal weil Max so vertieft liest?",o:["Er kommt zu spaet in die Schule","Er vergisst das Fruehstueck","Er stoert die Familie","Er verliert das Buch"],c:1,e:"Text: 'Oft ist Max so vertieft dass er das Fruehstueck vergisst.'"},
+  {d:2,text:"Seit einigen Jahren nimmt die Zahl der Elektroautos stark zu. Viele entscheiden sich dafuer weil sie umweltfreundlicher sind als Benzin- oder Dieselautos. Allerdings gibt es Herausforderungen: Die Reichweite ist begrenzt und es fehlt an Ladestationen. Experten sind jedoch zuversichtlich dass diese Probleme bald geloest werden.",q:"Was ist laut Text ein Problem bei Elektroautos?",o:["Sie sind zu teuer","Begrenzte Reichweite und fehlende Ladestationen","Sie sind zu laut","Sie brauchen viel Oel"],c:1,e:"Text nennt explizit: Reichweite und fehlende Ladestationen."},
+  {d:2,text:"Seit einigen Jahren nimmt die Zahl der Elektroautos stark zu. Viele entscheiden sich dafuer weil sie umweltfreundlicher sind als Benzin- oder Dieselautos. Allerdings gibt es Herausforderungen: Die Reichweite ist begrenzt und es fehlt an Ladestationen. Experten sind jedoch zuversichtlich dass diese Probleme bald geloest werden.",q:"Warum kaufen viele Menschen Elektroautos laut Text?",o:["Sie sind billiger","Sie sind schneller","Sie sind umweltfreundlicher","Sie sind moderner"],c:2,e:"Text: 'weil sie umweltfreundlicher sind als Benzin- oder Dieselautos.'"},
+  {d:2,text:"Als Clara die Bibliothek betrat wusste sie sofort: Hier gehoert sie hin. Der Geruch von alten Buechern und die hohen Holzregale fuellten sie mit Ruhe. Zu Hause war es immer laut - ihre drei Geschwister stritten sich staendig. Hier konnte sie endlich denken.",q:"Warum gefaellt es Clara in der Bibliothek? (Schlussfolgerung)",o:["Weil sie dort Freunde trifft","Weil es zu Hause laut ist und sie hier Stille findet","Weil Buecher kostenlos sind","Weil ihre Lehrerin es empfohlen hat"],c:1,e:"Nicht direkt gesagt: zu Hause laut (Geschwister) -> braucht Stille -> Bibliothek."},
+  {d:2,text:"Als Clara die Bibliothek betrat wusste sie sofort: Hier gehoert sie hin. Der Geruch von alten Buechern und die hohen Holzregale fuellten sie mit Ruhe. Zu Hause war es immer laut - ihre drei Geschwister stritten sich staendig. Hier konnte sie endlich denken.",q:"Was sagt der Text ueber Claras Zuhause?",o:["Es ist gross","Es ist laut wegen der Geschwister","Es ist weit weg","Es ist ruhig"],c:1,e:"Text: 'Zu Hause war es immer laut - ihre drei Geschwister stritten sich staendig.'"},
+  {d:3,text:"Technologie veraendert unsere Kommunikation grundlegend. Frueher schrieben Menschen Briefe die Wochen brauchten. Heute antwortet man in Sekunden. Doch Forscher warnen: Obwohl wir mehr kommunizieren als je zuvor fuehlen sich viele einsamer. Staendige Erreichbarkeit fuehrt nicht automatisch zu tieferen Beziehungen. Qualitaet nicht Quantitaet entscheidet.",q:"Was ist die Hauptthese des Textes?",o:["Technologie ist schlecht","Mehr Kommunikation fuehrt nicht automatisch zu besseren Beziehungen","Briefe sind besser","Forscher sind gegen Smartphones"],c:1,e:"Hauptthese: Qualitaet entscheidet, nicht Quantitaet."},
+  {d:3,text:"Technologie veraendert unsere Kommunikation grundlegend. Frueher schrieben Menschen Briefe die Wochen brauchten. Heute antwortet man in Sekunden. Doch Forscher warnen: Obwohl wir mehr kommunizieren als je zuvor fuehlen sich viele einsamer. Staendige Erreichbarkeit fuehrt nicht automatisch zu tieferen Beziehungen. Qualitaet nicht Quantitaet entscheidet.",q:"'Qualitaet nicht Quantitaet entscheidet' - welches Stilmittel ist das?",o:["Metapher","Vergleich","Antithese","Aufzaehlung"],c:2,e:"Antithese = zwei Gegensaetze werden gegenueber gestellt: Qualitaet vs. Quantitaet."}
 ],
 "leseverstehen2":[
-  {d:1,
-   text:"Der Schwarzwald ist eine der bekanntesten Regionen Deutschlands. Er liegt im Suedwesten des Landes, in Baden-Wuerttemberg. Typisch fuer den Schwarzwald sind seine dichten Nadelwaelder, tiefen Taeler und malerischen Doefer. Bekannt ist die Region auch fuer Kuckucksuhren, Kirschtorte und den Bollenhut. Jedes Jahr kommen Millionen von Touristen, um die Natur zu geniessen.",
-   q:"Wo liegt der Schwarzwald?",
-   o:["In Bayern","In Baden-Wuerttemberg","In der Schweiz","In Oesterreich"],
-   c:1,e:"Der Text nennt den Standort direkt: 'Er liegt im Suedwesten des Landes, in Baden-Wuerttemberg.'"},
-  {d:1,
-   text:"Der Schwarzwald ist eine der bekanntesten Regionen Deutschlands. Er liegt im Suedwesten des Landes, in Baden-Wuerttemberg. Typisch fuer den Schwarzwald sind seine dichten Nadelwaelder, tiefen Taeler und malerischen Doefer. Bekannt ist die Region auch fuer Kuckucksuhren, Kirschtorte und den Bollenhut. Jedes Jahr kommen Millionen von Touristen, um die Natur zu geniessen.",
-   q:"Was ist NICHT als typisch fuer den Schwarzwald im Text erwaehnt?",
-   o:["Kuckucksuhren","Kirschtorte","Alpenpanorama","Nadelwaelder"],
-   c:2,e:"Alpenpanorama wird im Text nicht erwaehnt. Genannt werden: Nadelwaelder, Taeler, Doefer, Kuckucksuhren, Kirschtorte und Bollenhut."},
-  {d:2,
-   text:"Lina hatte sich das anders vorgestellt. Als sie die Pruefung in der Hand hielt, sah sie sofort die rote Zahl oben rechts: 3.8. Nicht bestanden. Sie schluckte. Dabei hatte sie so viel gelernt, naetelang bis Mitternacht. Was hatte sie falsch gemacht? Vielleicht hatte sie die falschen Themen geuebt. Oder sie war einfach zu nervoes gewesen. Sie faltete das Blatt und steckte es in die Tasche. Beim naechsten Mal wuerde es besser laufen.",
-   q:"Wie reagiert Lina auf das Ergebnis?",
-   o:["Sie ist wuetend und wirft das Blatt weg","Sie ist entaeuscht, aber entschlossen es besser zu machen","Sie ist ueberrascht weil sie nicht gelernt hatte","Sie ist gleichgueltig"],
-   c:1,e:"Lina ist entaeuscht (schluckt, hatte viel gelernt), denkt nach was falsch lief, und sagt sich beim naechsten Mal wird es besser - also entschlossen."},
-  {d:2,
-   text:"Lina hatte sich das anders vorgestellt. Als sie die Pruefung in der Hand hielt, sah sie sofort die rote Zahl oben rechts: 3.8. Nicht bestanden. Sie schluckte. Dabei hatte sie so viel gelernt, naetelang bis Mitternacht. Was hatte sie falsch gemacht? Vielleicht hatte sie die falschen Themen geuebt. Oder sie war einfach zu nervoes gewesen. Sie faltete das Blatt und steckte es in die Tasche. Beim naechsten Mal wuerde es besser laufen.",
-   q:"Was sind Linas moegliche Erklaerungen fuer das schlechte Ergebnis laut Text?",
-   o:["Sie hatte zu wenig gelernt","Falsche Themen geuebt oder zu nervoes gewesen","Die Pruefung war unfair","Sie hatte das falsche Buch benutzt"],
-   c:1,e:"Der Text nennt zwei Moeglichkeiten: 'Vielleicht hatte sie die falschen Themen geuebt. Oder sie war einfach zu nervoes gewesen.'"},
-  {d:3,
-   text:"Technologie veraendert unsere Art zu kommunizieren grundlegend. Frueherer schrieben Menschen Briefe, die Tage oder Wochen brauchten. Heute antwortet man in Sekunden per Nachricht. Doch viele Forscher warnen: Obwohl wir mehr kommunizieren als je zuvor, fuehlen sich viele Menschen einsamer. Die staendige Erreichbarkeit fuehrt nicht automatisch zu tieferen Beziehungen. Qualitaet, nicht Quantitaet, entscheidet ueber echte Verbundenheit.",
-   q:"Was ist die Hauptthese dieses Textes?",
-   o:["Technologie ist schlecht fuer die Gesellschaft","Mehr Kommunikation fuehrt nicht zwangslaeu=flig zu besseren Beziehungen","Briefe sind besser als Nachrichten","Forscher sind gegen Smartphones"],
-   c:1,e:"Die Hauptthese steht am Ende: Quantitaet allein bringt keine echte Verbundenheit. Mehr Kommunikation = nicht automatisch tiefere Beziehungen."},
-  {d:3,
-   text:"Technologie veraendert unsere Art zu kommunizieren grundlegend. Frueherer schrieben Menschen Briefe, die Tage oder Wochen brauchten. Heute antwortet man in Sekunden per Nachricht. Doch viele Forscher warnen: Obwohl wir mehr kommunizieren als je zuvor, fuehlen sich viele Menschen einsamer. Die staendige Erreichbarkeit fuehrt nicht automatisch zu tieferen Beziehungen. Qualitaet, nicht Quantitaet, entscheidet ueber echte Verbundenheit.",
-   q:"Welches Stilmittel benutzt der letzte Satz? 'Qualitaet, nicht Quantitaet, entscheidet ueber echte Verbundenheit.'",
-   o:["Eine Metapher","Einen Vergleich mit 'wie'","Eine Antithese (Gegensatz)","Eine Aufzaehlung"],
-   c:2,e:"Der Satz stellt Qualitaet und Quantitaet als Gegensatz gegenueber = Antithese. Dies ist eine rhetorische Figur."}
+  {d:1,text:"Der Schwarzwald liegt im Suedwesten Deutschlands in Baden-Wuerttemberg. Typisch sind dichte Nadelwaelder, tiefe Taeler und malerische Doefer. Bekannt ist die Region fuer Kuckucksuhren, Kirschtorte und den Bollenhut. Jedes Jahr kommen Millionen Touristen um die Natur zu geniessen.",q:"Wo liegt der Schwarzwald?",o:["In Bayern","In Baden-Wuerttemberg","In der Schweiz","In Oesterreich"],c:1,e:"Text: 'liegt im Suedwesten Deutschlands in Baden-Wuerttemberg.'"},
+  {d:1,text:"Der Schwarzwald liegt im Suedwesten Deutschlands in Baden-Wuerttemberg. Typisch sind dichte Nadelwaelder, tiefe Taeler und malerische Doefer. Bekannt ist die Region fuer Kuckucksuhren, Kirschtorte und den Bollenhut. Jedes Jahr kommen Millionen Touristen um die Natur zu geniessen.",q:"Was ist NICHT im Text als typisch fuer den Schwarzwald genannt?",o:["Kuckucksuhren","Kirschtorte","Alpenpanorama","Nadelwaelder"],c:2,e:"Alpenpanorama = nicht im Text. Genannt: Nadelwaelder, Kuckucksuhren, Kirschtorte, Bollenhut."},
+  {d:1,text:"Der Schwarzwald liegt im Suedwesten Deutschlands in Baden-Wuerttemberg. Typisch sind dichte Nadelwaelder, tiefe Taeler und malerische Doefer. Bekannt ist die Region fuer Kuckucksuhren, Kirschtorte und den Bollenhut. Jedes Jahr kommen Millionen Touristen um die Natur zu geniessen.",q:"Warum kommen Touristen laut Text in den Schwarzwald?",o:["Wegen der Kuckucksuhren","Um Kirschtorte zu essen","Um die Natur zu geniessen","Wegen der Staedte"],c:2,e:"Text: 'Jedes Jahr kommen Millionen Touristen um die Natur zu geniessen.'"},
+  {d:2,text:"Lina hielt die Pruefung in der Hand: 3.8 - nicht bestanden. Sie schluckte. Dabei hatte sie naechtelang bis Mitternacht gelernt. Was hatte sie falsch gemacht? Vielleicht die falschen Themen oder zu nervoes. Sie faltete das Blatt. Beim naechsten Mal wuerde es besser laufen.",q:"Wie reagiert Lina auf das Ergebnis?",o:["Wuetend und gibt auf","Entaeuscht aber entschlossen","Gleichgueltig","Ueberrascht weil sie kaum gelernt hatte"],c:1,e:"Entaeuscht (schluckte) aber positiv (beim naechsten Mal besser)."},
+  {d:2,text:"Lina hielt die Pruefung in der Hand: 3.8 - nicht bestanden. Sie schluckte. Dabei hatte sie naechtelang bis Mitternacht gelernt. Was hatte sie falsch gemacht? Vielleicht die falschen Themen oder zu nervoes. Sie faltete das Blatt. Beim naechsten Mal wuerde es besser laufen.",q:"Was nennt der Text als moegliche Gruende fuer das schlechte Ergebnis?",o:["Zu wenig gelernt","Falsche Themen oder Nervositaet","Unfaire Pruefung","Falsches Buch"],c:1,e:"Text: 'Vielleicht die falschen Themen oder zu nervoes.'"},
+  {d:2,text:"Lina hielt die Pruefung in der Hand: 3.8 - nicht bestanden. Sie schluckte. Dabei hatte sie naechtelang bis Mitternacht gelernt. Was hatte sie falsch gemacht? Vielleicht die falschen Themen oder zu nervoes. Sie faltete das Blatt. Beim naechsten Mal wuerde es besser laufen.",q:"Was sagt der Satz 'Sie schluckte' ueber Linas Gefuehlslage?",o:["Sie ist hungrig","Sie ist ueberrascht und erschrocken","Sie ist gleichgueltig","Sie ist erleichtert"],c:1,e:"'Schlucken' = koerperliche Reaktion auf Schock/Bestuerzeung = sie ist erschrocken/betroffen."},
+  {d:3,text:"Die Alpen sind das groesste Gebirge Europas. Sie erstrecken sich ueber acht Laender von Frankreich bis Oesterreich. Der hoechste Gipfel ist der Mont Blanc mit 4808 Metern. Die Alpen bieten Lebensraum fuer viele seltene Tier- und Pflanzenarten. Gleichzeitig sind sie eines der beliebtesten Touristenziele weltweit.",q:"Was kann man aus dem Text schliessen? (Inferenz)",o:["Die Alpen sind nur im Sommer interessant","Die Alpen sind oekologisch und wirtschaftlich bedeutsam","Die Alpen haben keine seltenen Tiere","Nur Frankreich profitiert von den Alpen"],c:1,e:"Inferenz: seltene Arten (oekologisch) + beliebtestes Touristenziel (wirtschaftlich) = beides bedeutsam."},
+  {d:3,text:"Die Alpen sind das groesste Gebirge Europas. Sie erstrecken sich ueber acht Laender von Frankreich bis Oesterreich. Der hoechste Gipfel ist der Mont Blanc mit 4808 Metern. Die Alpen bieten Lebensraum fuer viele seltene Tier- und Pflanzenarten. Gleichzeitig sind sie eines der beliebtesten Touristenziele weltweit.",q:"Was ist der hoechste Gipfel der Alpen laut Text?",o:["Zugspitze","Matterhorn","Mont Blanc","Eiger"],c:2,e:"Text: 'Der hoechste Gipfel ist der Mont Blanc mit 4808 Metern.'"},
+  {d:3,text:"Wissenschaftler haben herausgefunden, dass Lesen nicht nur Wissen vermittelt, sondern auch Empathie foerdert. Wer regelmaessig Romane liest, kann sich besser in andere Menschen hineinversetzen. Das Gehirn aktiviert beim Lesen dieselben Bereiche wie bei echten Erfahrungen. Lesen ist also mehr als nur Informationsaufnahme.",q:"Was ist die zentrale Aussage des Textes?",o:["Lesen macht klug","Lesen foerdert nicht nur Wissen sondern auch soziale Faehigkeiten (Empathie)","Romane sind besser als Sachbuecher","Gehirn und Lesen haben nichts gemeinsam"],c:1,e:"Zentral: Lesen = Empathie + Wissen (nicht nur Informationsaufnahme)."},
+  {d:3,text:"Wissenschaftler haben herausgefunden, dass Lesen nicht nur Wissen vermittelt, sondern auch Empathie foerdert. Wer regelmaessig Romane liest, kann sich besser in andere Menschen hineinversetzen. Das Gehirn aktiviert beim Lesen dieselben Bereiche wie bei echten Erfahrungen. Lesen ist also mehr als nur Informationsaufnahme.",q:"Was bedeutet es laut Text, dass das Gehirn beim Lesen dieselben Bereiche aktiviert wie bei echten Erfahrungen?",o:["Lesen ist gefaehrlich","Lesen ist fuer das Gehirn wie echtes Erleben","Gehirne sind alle gleich","Lesen ersetzt echte Erfahrungen komplett"],c:1,e:"Das Gehirn unterscheidet kaum zwischen Lesen und echten Erfahrungen = Lesen wirkt wie Erleben."}
 ],
 "praefixe":[
-  {d:1,q:"Was bedeutet das Praefx 'un-'?",o:["sehr","nicht / Gegenteil","wieder","vor"],c:1,e:"un- = Verneinung/Gegenteil: ungluecklich, unmoeglich, unbekannt."},
-  {d:1,q:"Was bedeutet 'vor-' in 'vorhersagen'?",o:["nach","zeitlich davor","gegen","zusammen"],c:1,e:"vor- = zeitlich oder raeumlich davor: vorbereiten, vorhersagen."},
-  {d:1,q:"Was bedeutet das Praefx 'miss-'?",o:["wieder","falsch / schlecht","sehr","zusammen"],c:1,e:"miss- = falsch, negativ: misslingen, missverstehen, missachten."},
-  {d:2,q:"Welches Praefx bedeutet 'zurueck' oder 'wieder'?",o:["ver-","zer-","re- / rueck-","ent-"],c:2,e:"re- oder rueck- = zurueck/wieder: Rueckgabe, Rueckkehr, reorganisieren."},
-  {d:2,q:"Was bewirkt das Praefx 'zer-' meist?",o:["Steigerung","Trennung / Zerstoerung","Wiederholung","Verneinung"],c:1,e:"zer- = Zertrennung, Zerstoerung: zerbrechen, zerrissen, zerstoeren."},
-  {d:3,q:"Das Praefx 'ent-' kann welche Bedeutungen haben?",o:["Nur Beginn","Entfernung, Befreiung oder Beginn","Nur Verneinung","Nur Steigerung"],c:1,e:"ent- hat drei Bedeutungen: 1. Entfernung, 2. Beginn, 3. Befreiung."},
-  {d:3,q:"Welches Wort mit Praefx ist FALSCH gebildet?",o:["vorschlagen","unmoeglich","misslingen","zuruckfaren"],c:3,e:"'zuruckfaren' ist falsch - korrekt: 'zurueckfahren'."}
+  {d:1,q:"Was bedeutet 'un-' in 'ungluecklich'?",o:["sehr","nicht/Gegenteil","wieder","vor"],c:1,e:"un- = Verneinung: ungluecklich, unmoeglich."},
+  {d:1,q:"Was bedeutet 'vor-' in 'vorhersagen'?",o:["nach","zeitlich davor","gegen","zusammen"],c:1,e:"vor- = davor: vorbereiten, vorhersagen."},
+  {d:1,q:"Was bedeutet 'miss-' in 'misslingen'?",o:["wieder","falsch/schlecht","sehr","zusammen"],c:1,e:"miss- = negativ: misslingen, missverstehen."},
+  {d:1,q:"Was bedeutet 'zer-' in 'zerbrechen'?",o:["Steigerung","Zerstoerung","Wiederholung","Verneinung"],c:1,e:"zer- = Zerstoerung: zerbrechen, zerreissen."},
+  {d:1,q:"Was bewirkt 'be-' in 'beleuchten'?",o:["Verneinung","macht transitiv (etwas beleuchten)","Steigerung","Wiederholung"],c:1,e:"be- macht Verben transitiv: leuchten -> beleuchten."},
+  {d:1,q:"Was bedeutet 'wieder-' in 'wiederkommen'?",o:["nicht","erneut/nochmal","schnell","falsch"],c:1,e:"wieder- = erneut, nochmal: wiederkommen, wiederholen."},
+  {d:1,q:"Was bedeutet 'ab-' in 'abnehmen'?",o:["dazu","weg von / weniger","gemeinsam","vor"],c:1,e:"ab- = weg von, Verminderung: abnehmen, abbauen."},
+  {d:1,q:"Was bedeutet 'an-' in 'ankommen'?",o:["weg","Ankunft/Beginn","falsch","dagegen"],c:1,e:"an- = Ankunft, Beginn: ankommen, anfangen."},
+  {d:1,q:"Was bedeutet 'auf-' in 'aufmachen'?",o:["schliessen","oeffnen/nach oben","schnell","falsch"],c:1,e:"auf- = oeffnen oder nach oben: aufmachen, aufsteigen."},
+  {d:1,q:"Was bedeutet 'aus-' in 'ausgehen'?",o:["hinein","hinaus/beenden","schnell","falsch"],c:1,e:"aus- = hinaus oder beenden: ausgehen, ausmachen."},
+  {d:1,q:"Was bedeutet 'mit-' in 'mitmachen'?",o:["ohne","zusammen mit anderen","gegen","vor"],c:1,e:"mit- = zusammen: mitmachen, mitkommen."},
+  {d:1,q:"Was bedeutet 'ein-' in 'einschlafen'?",o:["aufwachen","beginnen zu schlafen","schlafen machen","sehr tief schlafen"],c:1,e:"ein- = Beginn eines Zustands: einschlafen (beginnt zu schlafen)."},
+  {d:2,q:"Welches Praefix bedeutet 'zurueck' oder 'wieder'?",o:["ver-","zer-","re-/rueck-","ent-"],c:2,e:"re- (lat.) oder rueck- = zurueck/wieder."},
+  {d:2,q:"'ent-' hat welche Bedeutungen?",o:["Nur Beginn","Entfernung, Befreiung oder Beginn","Nur Verneinung","Nur Steigerung"],c:1,e:"ent-: Entfernung (entfernen), Beginn (entfachen), Befreiung (entlasten)."},
+  {d:2,q:"Was bedeutet 'ver-' in 'verbrauchen'?",o:["weg/aufbrauchen","wieder","schlecht","zusammen"],c:0,e:"ver- = vollstaendig aufbrauchen."},
+  {d:2,q:"Was bedeutet 'ver-' in 'verschreiben' (Rezept)?",o:["zu viel schreiben","offiziell aufschreiben","versehentlich falsch schreiben","wieder schreiben"],c:1,e:"'verschreiben' = offiziell aufschreiben. 'sich verschreiben' = Schreibfehler machen."},
+  {d:2,q:"Was bedeutet 'ge-' als Praefix meist (z.B. Gebirge, Gelaende)?",o:["Verneinung","Kollektiv/Gesamtheit","Steigerung","Wiederholung"],c:1,e:"ge- als Nomen-Praefix = Kollektivum: Gebirge (=viele Berge), Gelaende."},
+  {d:2,q:"Was bedeutet 'ueber-' in 'ueberschreiten'?",o:["unter","hinueber/uebertreffen","schnell","falsch"],c:1,e:"ueber- = hinueber oder mehr als noetig: ueberschreiten, uebertreiben."},
+  {d:2,q:"Was bedeutet 'unter-' in 'unterbrechen'?",o:["oben","darunter/stoppen","schnell","falsch"],c:1,e:"unterbrechen = stoppen, eingreifen. unter- = darunter."},
+  {d:2,q:"Was ist der Unterschied zwischen 'um-' (trennbar) und 'um-' (untrennbar) in 'umfahren'?",o:["Kein Unterschied","Trennbar: mit dem Auto fahren und umstossen; Untrennbar: einen Weg herumfahren","Trennbar = Vergangenheit","Untrennbar = Passiv"],c:1,e:"'Er faehrt das Schild um' (trennbar) = er stoesst es um. 'Er umfaehrt die Stadt' (untrennbar) = faehrt drum herum."},
+  {d:3,q:"Welches Wort mit Praefix ist FALSCH gebildet?",o:["vorschlagen","entlassen","misslingen","zurueckfaren"],c:3,e:"'zurueckfaren' ist falsch - korrekt: 'zurueckfahren'."},
+  {d:3,q:"Was ist der Unterschied zwischen 'uebersetzen' (trennbar) und 'uebersetzen' (untrennbar)?",o:["Kein Unterschied","Trennbar = ans andere Ufer setzen; Untrennbar = in andere Sprache uebertragen","Trennbar = Vergangenheit","Trennbar = aktiv"],c:1,e:"'setzt ueber' (trennbar) = ans Ufer fahren. 'uebersetzt' (untrennbar) = Text uebersetzen."},
+  {d:3,q:"Welches Praefix kann sowohl trennbar als auch untrennbar sein?",o:["un-","miss-","durch-","ab-"],c:2,e:"'durch-': 'Er schnitt das Brot durch' (trennbar) vs. 'Er durchschnitt das Seil' (untrennbar)."},
+  {d:3,q:"Was bewirkt 'er-' in Verben wie 'erarbeiten, erreichen, erlernen'?",o:["Verneinung","erfolgreiches Abschliessen einer Taetigkeit","Beginn","Wiederholung"],c:1,e:"er- = Erlangen eines Ergebnisses: erarbeiten (durch Arbeit erlangen), erreichen, erlernen."},
+  {d:3,q:"Was bedeutet 'miss-' genauestens in 'misslingen, missverstehen, missachten'?",o:["Steigerung","negatives Ergebnis oder falsche Ausfuehrung","Beendigung","Kollektiv"],c:1,e:"miss- zeigt an, dass etwas negativ auslaeuft oder falsch getan wird."}
 ],
 "redewendungen":[
-  {d:1,q:"Was bedeutet 'den Nagel auf den Kopf treffen'?",o:["Einen Fehler machen","Genau das Richtige sagen","Jemanden verletzen","Pech haben"],c:1,e:"'Den Nagel auf den Kopf treffen' = etwas genau richtig formulieren."},
-  {d:1,q:"Was bedeutet 'ins kalte Wasser springen'?",o:["Schwimmen gehen","Etwas ohne Vorbereitung angehen","Jemanden ueberraschen","Einen Fehler machen"],c:1,e:"'Ins kalte Wasser springen' = etwas ohne Vorbereitung direkt angehen."},
-  {d:1,q:"Was bedeutet 'auf dem Holzweg sein'?",o:["Im Wald sein","Sich irren","Langsam vorankommen","Erfolgreich sein"],c:1,e:"'Auf dem Holzweg sein' = sich taueschen, falsch liegen."},
-  {d:2,q:"Was bedeutet 'jemandem auf den Zahn fuehlen'?",o:["Zum Zahnarzt gehen","Jemanden pruefen / ausfragen","Jemanden troesten","Jemanden taueschen"],c:1,e:"'Jemandem auf den Zahn fuehlen' = jemanden genau befragen."},
-  {d:2,q:"Was bedeutet 'das Handtuch werfen'?",o:["Aufraeumen","Aufgeben","Beginnen","Siegen"],c:1,e:"'Das Handtuch werfen' = aufgeben, kapitulieren (aus dem Boxsport)."},
-  {d:2,q:"Was bedeutet 'unter vier Augen'?",o:["Mit vier Personen","Unter Beobachtung","Im Geheimen / nur zu zweit","Vor einem Spiegel"],c:2,e:"'Unter vier Augen' = nur zu zweit, vertraulich, ohne Zuschauer."},
-  {d:3,q:"Was bedeutet 'jemandem den Zahn ziehen'?",o:["Zum Zahnarzt schicken","Jemandem eine Illusion nehmen","Jemandem wehtun","Jemanden ueberreden"],c:1,e:"'Jemandem den Zahn ziehen' = jemandem eine falsche Hoffnung nehmen."},
-  {d:3,q:"Was bedeutet 'auf grossem Fuss leben'?",o:["Grosse Schuhe tragen","Verschwenderisch / luxurioes leben","Viel spazieren","Reich werden"],c:1,e:"'Auf grossem Fuss leben' = luxurioes und verschwenderisch ueber seine Verhaeltnisse."},
-  {d:3,q:"Was bedeutet 'eine Extrawurst braten'?",o:["Kochen","Jemanden bevorzugen / besonders behandeln","Feiern","Luegen"],c:1,e:"'Eine Extrawurst braten' = jemanden besonders behandeln, Sonderwuensche erfuellen."}
+  {d:1,q:"Was bedeutet 'den Nagel auf den Kopf treffen'?",o:["Fehler machen","Genau das Richtige sagen","Jemanden verletzen","Pech haben"],c:1,e:"= etwas genau richtig formulieren."},
+  {d:1,q:"Was bedeutet 'ins kalte Wasser springen'?",o:["Schwimmen gehen","Ohne Vorbereitung etwas angehen","Jemanden erschrecken","Einen Fehler machen"],c:1,e:"= direkt und ohne Vorbereitung anfangen."},
+  {d:1,q:"Was bedeutet 'auf dem Holzweg sein'?",o:["Im Wald sein","Sich irren","Langsam sein","Erfolgreich sein"],c:1,e:"= sich taeuschen, falsch liegen."},
+  {d:1,q:"Was bedeutet 'das Handtuch werfen'?",o:["Aufraeumen","Aufgeben","Anfangen","Siegen"],c:1,e:"= aufgeben, kapitulieren."},
+  {d:1,q:"Was bedeutet 'unter vier Augen'?",o:["Mit vier Leuten","Unter Beobachtung","Vertraulich zu zweit","Vor dem Spiegel"],c:2,e:"= nur zu zweit, vertraulich."},
+  {d:1,q:"Was bedeutet 'jemandem auf den Zahn fuehlen'?",o:["Zahnarzt spielen","Jemanden pruefen/ausfragen","Jemanden troesten","Jemanden taeuschen"],c:1,e:"= jemanden genau befragen."},
+  {d:1,q:"Was bedeutet 'Eulen nach Athen tragen'?",o:["Reisen","Etwas Ueberflussiges tun","Klug sein","Handeln"],c:1,e:"= etwas Ueberflussiges tun (Athen hatte schon viele Eulen)."},
+  {d:1,q:"Was bedeutet 'den Braten riechen'?",o:["Kochen","Eine Falle/Absicht ahnen","Hunger haben","Gefahr sein"],c:1,e:"= etwas Verdaechtiges ahnen."},
+  {d:1,q:"Was bedeutet 'Tomaten auf den Augen haben'?",o:["Krank sein","Etwas Offensichtliches nicht sehen","Rot sehen","Weinen"],c:1,e:"= etwas nicht sehen obwohl es offensichtlich ist."},
+  {d:1,q:"Was bedeutet 'auf der Nase herumtanzen'?",o:["Sport machen","Jemanden nach Belieben behandeln","Taenzen","Lustig sein"],c:1,e:"= jemandem alles erlauben, ihn nicht ernstnehmen."},
+  {d:1,q:"Was bedeutet 'die Kurve kratzen'?",o:["Auto fahren","Schnell verschwinden/fliehen","Kurven fahren","Probleme loesen"],c:1,e:"= schnell und unauffaellig verschwinden."},
+  {d:1,q:"Was bedeutet 'jemandem auf die Schliche kommen'?",o:["Jemanden anschleichen","Jemandes geheime Absicht entdecken","Jemanden loben","Mit jemandem sprechen"],c:1,e:"= die geheimen Absichten oder Handlungen jemanden aufdecken."},
+  {d:2,q:"Was bedeutet 'jemandem den Zahn ziehen'?",o:["Zahnarzt schicken","Jemandem eine Illusion nehmen","Jemanden schmerzen","Jemanden ueberreden"],c:1,e:"= jemandem eine falsche Hoffnung nehmen."},
+  {d:2,q:"Was bedeutet 'auf grossem Fuss leben'?",o:["Grosse Schuhe tragen","Verschwenderisch leben","Viel spazieren","Reich werden"],c:1,e:"= luxurioes und ueber seine Verhaeltnisse leben."},
+  {d:2,q:"Was bedeutet 'eine Extrawurst braten'?",o:["Kochen","Jemanden besonders bevorzugen","Feiern","Luegen"],c:1,e:"= jemanden besonders behandeln, Sonderwuensche erfuellen."},
+  {d:2,q:"Was bedeutet 'mit jemandem ein Huehnchen rupfen'?",o:["Zusammen kochen","Eine Auseinandersetzung klaeren","Freunde sein","Jemanden belehren"],c:1,e:"= eine Auseinandersetzung mit jemandem austragen."},
+  {d:2,q:"Was bedeutet 'das Faeschen ins Rollen bringen'?",o:["Sport machen","Etwas in Gang setzen","Probleme machen","Trinken"],c:1,e:"= etwas in Gang setzen, starten."},
+  {d:2,q:"Was bedeutet 'um den heissen Brei herumreden'?",o:["Essen kochen","Etwas Wichtiges nicht direkt ansprechen","Schnell reden","Luegen"],c:1,e:"= das eigentliche Thema absichtlich meiden, ausweichen."},
+  {d:2,q:"Was bedeutet 'jemandem einen Baeren aufbinden'?",o:["Jemanden tragen","Jemanden anlluegen/belluegen","Jemanden umarmen","Jemanden erschrecken"],c:1,e:"= jemanden belluegen, jemanden eine Geschichte erzaehlen die nicht wahr ist."},
+  {d:2,q:"Was bedeutet 'die Flinte ins Korn werfen'?",o:["Sport machen","Aufgeben/kapitulieren","Wuetend sein","Lustig sein"],c:1,e:"= aufgeben, die Hoffnung verlieren (aehnlich wie 'das Handtuch werfen')."},
+  {d:2,q:"Was bedeutet 'schwimmen gehen' im uebertragenen Sinn?",o:["Sport treiben","Den Ueberblick verlieren","Lachen","Faulenzen"],c:1,e:"= den Ueberblick verlieren, ueberfordert sein."},
+  {d:3,q:"Was bedeutet 'jemandem ein Bein stellen'?",o:["Sport machen","Jemanden absichtlich zu Fall bringen","Jemanden helfen","Jemanden besuchen"],c:1,e:"= jemanden absichtlich scheitern lassen, sabotieren."},
+  {d:3,q:"Was bedeutet 'das Kind mit dem Bade ausschuetten'?",o:["Kinder waschen","Das Gute mit dem Schlechten wegwerfen","Aufraeum","Probleme loesen"],c:1,e:"= das Gute zusammen mit dem Schlechten wegwerfen, ueberschiessen."},
+  {d:3,q:"Was bedeutet 'zwischen den Stuehlen sitzen'?",o:["Keinen Platz haben","Weder der einen noch der anderen Partei angehoeren","Bequem sitzen","Muede sein"],c:1,e:"= in einer Lage sein die keine Seite befriedigt, zwischen zwei Optionen feststecken."},
+  {d:3,q:"Was bedeutet 'Oel ins Feuer giessen'?",o:["Feuer loeschen","Einen Konflikt verschlimmern","Helfen","Beruhigen"],c:1,e:"= einen Streit/Konflikt absichtlich oder unabsichtlich verschlimmern."},
+  {d:3,q:"Was bedeutet 'auf Messers Schneide stehen'?",o:["Kochen","In einer sehr gefaehrlichen/entscheidenden Situation sein","Vorsichtig sein","Gut stehen"],c:1,e:"= in einer aeusserst kritischen, unentschiedenen Situation sein."}
 ],
 "adjektivdeklination":[
-  {d:1,q:"'Ein ___ Mann' (jung, Nominativ) - Welche Endung?",o:["junge","junger","jungen","jungem"],c:1,e:"Nach unbestimmtem Artikel im Nominativ Maskulin: -er (ein junger Mann)."},
-  {d:1,q:"'Das ___ Kind' (klein, Nominativ) - Welche Endung?",o:["kleines","kleiner","kleine","kleinem"],c:2,e:"Nach bestimmtem Artikel im Nominativ Neutrum: -e (das kleine Kind)."},
-  {d:1,q:"'Die ___ Frau' (alt, Akkusativ) - Welche Endung?",o:["alten","alte","alter","altem"],c:1,e:"Nach bestimmtem Artikel im Akkusativ Feminin: -e (die alte Frau)."},
-  {d:2,q:"'___ Wasser' (kalt, ohne Artikel, Nominativ) - Welche Endung?",o:["kalte","kaltem","kaltes","kalter"],c:2,e:"Ohne Artikel im Nominativ Neutrum: starke Deklination = -es (kaltes Wasser)."},
-  {d:2,q:"'Mit dem ___ Auto' (neu, Dativ) - Welche Endung?",o:["neue","neues","neuen","neuem"],c:2,e:"Nach bestimmtem Artikel im Dativ Neutrum: -en (mit dem neuen Auto)."},
-  {d:2,q:"'Einem ___ Mann helfen' (alt, Dativ) - Welche Endung?",o:["alten","alte","alter","altem"],c:0,e:"Nach unbestimmtem Artikel im Dativ Maskulin: -en (einem alten Mann)."},
-  {d:3,q:"'___ Maedchen' (huebsch, Nominativ, ohne Artikel) - Welche Endung?",o:["huebsches","huebsche","huebscher","huebschem"],c:0,e:"Ohne Artikel, Nominativ Neutrum: starke Deklination = -es (huebsches Maedchen)."},
-  {d:3,q:"Welche Aussage zur Adjektivdeklination ist korrekt?",o:["Nach Nullartikel immer schwache Endung","Nach bestimmtem Artikel schwache Endung","Nach unbestimmtem Artikel immer -en","Adjektive werden nie dekliniert"],c:1,e:"Nach bestimmtem Artikel: schwache Deklination (-e oder -en). Nach Nullartikel: starke Deklination."},
-  {d:3,q:"'Die Kosten des ___ Umbaus' (teuer, Genitiv) - Welche Endung?",o:["teueren","teuren","teures","teurem"],c:1,e:"Nach bestimmtem Artikel im Genitiv: -en (des teuren Umbaus). Achtung: Synkope teur-."}
+  {d:1,q:"'Ein ___ Mann' (jung, Nominativ) - Welche Endung?",o:["junge","junger","jungen","jungem"],c:1,e:"Unbest. Artikel, Nominativ Maskulin: -er."},
+  {d:1,q:"'Das ___ Kind' (klein, Nominativ) - Welche Endung?",o:["kleines","kleiner","kleine","kleinem"],c:2,e:"Best. Artikel, Nominativ Neutrum: -e."},
+  {d:1,q:"'Die ___ Frau' (alt, Akkusativ) - Welche Endung?",o:["alten","alte","alter","altem"],c:1,e:"Best. Artikel, Akkusativ Feminin: -e."},
+  {d:1,q:"'Ich sehe den ___ Mann.' (alt, Akkusativ) - Welche Endung?",o:["alte","alter","alten","altem"],c:2,e:"Best. Artikel, Akkusativ Maskulin: -en."},
+  {d:1,q:"'Mit dem ___ Auto' (neu, Dativ) - Welche Endung?",o:["neue","neues","neuen","neuem"],c:2,e:"Best. Artikel, Dativ Neutrum: -en."},
+  {d:1,q:"'Die ___ Buecher' (interessant, Nominativ Plural) - Welche Endung?",o:["interessanter","interessante","interessanten","interessantem"],c:1,e:"Best. Artikel, Nominativ Plural: -en (ABER Nominativ Plural ohne Artikel: -e)."},
+  {d:1,q:"'Einer ___ Frau helfen' (alt, Dativ) - Welche Endung?",o:["alten","alte","alter","altem"],c:0,e:"Unbest. Artikel, Dativ Feminin: -en."},
+  {d:1,q:"'Ein ___ Hund' (gross, Nominativ) - Welche Endung?",o:["grosse","grossen","grosser","grossem"],c:2,e:"Unbest. Artikel, Nominativ Maskulin: -er."},
+  {d:1,q:"'Die ___ Lehrerin' (nett, Nominativ) - Welche Endung?",o:["nette","netter","netten","nettem"],c:0,e:"Best. Artikel, Nominativ Feminin: -e."},
+  {d:1,q:"Ich esse einen ___ Apfel.' (rot, Akkusativ) - Welche Endung?",o:["rote","roter","roten","rotem"],c:2,e:"Unbest. Artikel, Akkusativ Maskulin: -en."},
+  {d:2,q:"'___ Wasser' (kalt, Nominativ, ohne Artikel) - Welche Endung?",o:["kalte","kaltem","kaltes","kalter"],c:2,e:"Ohne Artikel, Nominativ Neutrum: starke Deklination = -es."},
+  {d:2,q:"'Einem ___ Mann helfen' (alt, Dativ) - Welche Endung?",o:["alten","alte","alter","altem"],c:0,e:"Unbest. Artikel, Dativ Maskulin: -en."},
+  {d:2,q:"'___ Kaffee bitte!' (schwarz, Akkusativ, ohne Artikel) - Welche Endung?",o:["schwarzen","schwarze","schwarzer","schwarzem"],c:2,e:"Ohne Artikel, Akkusativ Maskulin: starke Deklination = -en."},
+  {d:2,q:"'Wegen ___ schlechten Wetters' (Genitiv) - Welche Endung?",o:["schlechtes","schlechtem","schlechten","schlechter"],c:2,e:"Best. Artikel, Genitiv Neutrum: -en."},
+  {d:2,q:"'___ Milch ist gut.' (frisch, Nominativ, ohne Artikel) - Welche Endung?",o:["frische","frischer","frisches","frischem"],c:0,e:"Ohne Artikel, Nominativ Feminin: starke Deklination = -e."},
+  {d:2,q:"'Mit ___ heissem Tee' (ohne Artikel, Dativ) - Welche Endung fuer 'heiss'?",o:["heissen","heisse","heissem","heisser"],c:2,e:"Ohne Artikel, Dativ Maskulin/Neutrum: starke Deklination = -em."},
+  {d:2,q:"'Trotz ___ Regens' (stark, Genitiv) - Welche Endung fuer 'stark'?",o:["starken","starke","starker","starkes"],c:0,e:"Best. Artikel, Genitiv Maskulin: -en."},
+  {d:2,q:"'Er kauft ___ frisches Brot.' (ohne Artikel, Akkusativ) - Welche Endung?",o:["frische","frisches","frischem","frischen"],c:1,e:"Ohne Artikel, Akkusativ Neutrum: starke Deklination = -es."},
+  {d:3,q:"'___ Maedchen' (huebsch, Nominativ, ohne Artikel) - Welche Endung?",o:["huebsches","huebsche","huebscher","huebschem"],c:0,e:"Ohne Artikel, Nominativ Neutrum: -es (starke Deklination)."},
+  {d:3,q:"Welche Aussage ist korrekt?",o:["Nach Nullartikel immer schwache Endung","Nach bestimmtem Artikel schwache Endung (-e/-en)","Nach unbest. Artikel immer -en","Adjektive werden nie dekliniert"],c:1,e:"Best. Artikel = schwache Deklination. Nullartikel = starke Deklination."},
+  {d:3,q:"'Die Kosten des ___ Umbaus' (teuer, Genitiv) - Welche Endung?",o:["teueren","teuren","teures","teurem"],c:1,e:"Best. Artikel, Genitiv Maskulin: -en. Achtung Synkope: teur-."},
+  {d:3,q:"'Ich trinke ___ schwarzen Kaffee.' (ohne Artikel, Akkusativ Mask.) - Welche Endung?",o:["schwarze","schwarzer","schwarzen","schwarzem"],c:2,e:"Ohne Artikel, Akkusativ Maskulin: starke Deklination = -en."},
+  {d:3,q:"Was ist der Unterschied zwischen starker und schwacher Deklination?",o:["Kein Unterschied","Stark nach Nullartikel (Adjektiv traegt Kasusendung); Schwach nach bestimmtem Artikel","Stark = mehr Endungen","Schwach = Genitiv"],c:1,e:"Stark = Adjektiv uebernimmt Kasusmarkierung (kein Artikel). Schwach = Artikel traegt Kasusmarkierung."},
+  {d:3,q:"'Mit ___ gutem Willen' (ohne Artikel, Dativ Mask.) - Welche Endung?",o:["guten","gutem","gute","gutes"],c:1,e:"Ohne Artikel, Dativ Maskulin: starke Deklination = -em."},
+  {d:3,q:"Welche Endung hat das Adjektiv nach 'kein' im Nominativ Maskulin?",o:["-e","-er","-en","-em"],c:1,e:"Nach 'kein' (unbestimmter Artikel-Typ): Nominativ Maskulin = -er (kein grosser Fehler)."}
+],
+"konjunktionen":[
+  {d:1,q:"Was ist eine Konjunktion?",o:["Ein Nomen","Ein Verbindungswort","Ein Adjektiv","Ein Verb"],c:1,e:"Konjunktionen verbinden Woerter, Satzteile oder Saetze."},
+  {d:1,q:"Welche Konjunktion drueckt einen Gegensatz aus?",o:["und","oder","aber","denn"],c:2,e:"'aber' drueckt Gegensatz aus."},
+  {d:1,q:"Welche Konjunktion drueckt einen Grund aus?",o:["und","oder","aber","denn"],c:3,e:"'denn' = Grund: Er blieb zu Hause, denn er war krank."},
+  {d:1,q:"Welche Konjunktion drueckt eine Alternative aus?",o:["und","oder","aber","denn"],c:1,e:"'oder' = Alternative."},
+  {d:1,q:"Wohin kommt das Verb in einem 'weil'-Satz?",o:["Anfang","Ende","2. Stelle","Mitte"],c:1,e:"Subordinierende Konjunktionen -> Verb ans Ende: ...weil er krank war."},
+  {d:1,q:"Was folgt nach 'obwohl'?",o:["Hauptsatz normal","Nebensatz mit Verb am Ende","Infinitiv","Konjunktiv"],c:1,e:"obwohl -> Nebensatz: Er kam, obwohl er muede war."},
+  {d:1,q:"Welche Konjunktion drueckt eine Bedingung aus?",o:["weil","obwohl","wenn","damit"],c:2,e:"'wenn' = Bedingung: Wenn es regnet, bleibe ich zu Hause."},
+  {d:1,q:"Welche Konjunktion drueckt eine Absicht aus?",o:["weil","obwohl","wenn","damit"],c:3,e:"'damit' = Absicht/Zweck."},
+  {d:1,q:"Wie heissen die vier koordinierenden Konjunktionen?",o:["weil, obwohl, wenn, damit","und, oder, aber, denn","wer, was, wo, wie","der, die, das, ein"],c:1,e:"Koordinierende Konjunktionen: und, oder, aber, denn."},
+  {d:1,q:"'Er ist muede, ___ er geht trotzdem.' - Welche Konjunktion passt?",o:["weil","obwohl","denn","wenn"],c:1,e:"'obwohl' drueckt Gegensatz trotz Hindernis aus."},
+  {d:1,q:"Welche Konjunktion verbindet zwei Hauptsaetze OHNE Wortstellung zu aendern?",o:["weil","obwohl","und","wenn"],c:2,e:"Koordinierende Konjunktionen (und, oder, aber, denn) aendern die Wortstellung nicht."},
+  {d:1,q:"'Er lernt, ___ er die Pruefung besteht.' - Welche Konjunktion?",o:["weil","damit","obwohl","wenn"],c:1,e:"'damit' = Absicht: Er lernt, damit er die Pruefung besteht."},
+  {d:2,q:"Was ist der Unterschied zwischen 'weil' und 'denn'?",o:["Kein Unterschied","'weil' = Nebensatz (Verb am Ende); 'denn' = Hauptsatz (Verb an 2. Stelle)","'weil' = Gegenwart; 'denn' = Vergangenheit","'denn' leitet Nebensatz ein"],c:1,e:"'Ich bleibe zu Hause, weil ich krank bin.' vs. '...denn ich bin krank.'"},
+  {d:2,q:"Was ist der Unterschied zwischen 'aber' und 'sondern'?",o:["Kein Unterschied","'aber' = Gegensatz; 'sondern' = nach Verneinung zur Richtigstellung","'aber' = formal","'sondern' = Konjunktionaladverb"],c:1,e:"'Er ist nicht dumm, sondern faul.' (nach Verneinung). 'Er ist klug, aber faul.' (ohne Verneinung)."},
+  {d:2,q:"Was ist 'als' vs. 'wenn' bei Vergangenheit?",o:["Kein Unterschied","'als' = einmalig in Vergangenheit; 'wenn' = wiederholt oder Zukunft","'als' = formal","'wenn' = nur Zukunft"],c:1,e:"'Als ich jung war...' (einmalig). 'Wenn ich muede bin...' (wiederholt)."},
+  {d:2,q:"Welche Konjunktion drueckt eine zeitliche Abfolge aus?",o:["weil","nachdem","damit","obwohl"],c:1,e:"'nachdem' = temporal: Nachdem er gegessen hatte, schlief er."},
+  {d:2,q:"Welche Konjunktion ist konzessiv?",o:["weil","und","obwohl","oder"],c:2,e:"Konzessiv = Einraeumung trotz Hindernis: obwohl, obgleich."},
+  {d:2,q:"Forme um: 'Er ist muede. Trotzdem kommt er.' -> mit 'obwohl'",o:["Er ist muede, obwohl er kommt.","Er kommt, obwohl er muede ist.","Obwohl er muede, kommt er.","Er kommt obwohl er ist muede."],c:1,e:"'Er kommt, obwohl er muede ist.' - Verb ans Ende."},
+  {d:2,q:"'Ich blieb zu Hause, ___ es regnete.' - kausal: was passt?",o:["obwohl","weil","damit","wenn"],c:1,e:"'weil' = Grund/Ursache (kausal)."},
+  {d:3,q:"Was ist eine konzessive Konjunktion?",o:["Fuer Grund","Gegensatz trotz Erwartung (obwohl, obgleich)","Fuer Bedingung","Fuer Zeitpunkt"],c:1,e:"Konzessiv: obwohl - etwas passiert trotz eines Hindernisses."},
+  {d:3,q:"Welche Konjunktion ist NICHT subordinierend?",o:["weil","obwohl","wenn","aber"],c:3,e:"'aber' = koordinierend. weil/obwohl/wenn = subordinierend."},
+  {d:3,q:"Was ist eine kausale Konjunktion?",o:["Drueckt Zeit aus","Drueckt Grund aus (weil, da, denn)","Drueckt Gegensatz aus","Drueckt Bedingung aus"],c:1,e:"Kausal = Ursache/Grund: weil, da, denn."},
+  {d:3,q:"Was ist eine konditionale Konjunktion?",o:["Drueckt Zeit aus","Drueckt Grund aus","Drueckt Bedingung aus (wenn, falls, sofern)","Drueckt Gegensatz aus"],c:2,e:"Konditional = Bedingung: wenn, falls, sofern."},
+  {d:3,q:"'Er lernt, um die Pruefung zu bestehen.' - Was entspricht 'um...zu'?",o:["weil","obwohl","damit","wenn"],c:2,e:"'um...zu' = final, entspricht 'damit': Er lernt, damit er besteht."}
+],
+"satzglieder":[
+  {d:1,q:"Was ist das Subjekt eines Satzes?",o:["Das Verb","Der Handlungsausfuehrender im Nominativ","Das direkte Objekt","Ein Adjektiv"],c:1,e:"Subjekt = Wer/Was fuehrt die Handlung aus? Immer im Nominativ."},
+  {d:1,q:"Was ist das Praedikat?",o:["Das Nomen","Die Verbform(en) im Satz","Das Objekt","Das Adjektiv"],c:1,e:"Praedikat = die Verbform(en): Er schlaeft. Sie hat gegessen."},
+  {d:1,q:"Welches Satzglied antwortet auf 'Wen oder Was'?",o:["Subjekt","Dativobjekt","Akkusativobjekt","Genitivobjekt"],c:2,e:"Akkusativobjekt = direktes Objekt (Wen/Was?)."},
+  {d:1,q:"Welches Satzglied antwortet auf 'Wem'?",o:["Subjekt","Dativobjekt","Akkusativobjekt","Genitivobjekt"],c:1,e:"Dativobjekt = indirektes Objekt (Wem?)."},
+  {d:1,q:"'Er laeuft schnell.' - Was ist 'schnell'?",o:["Subjekt","Praedikat","Adverbiale Bestimmung","Objekt"],c:2,e:"'schnell' = adverbiale Bestimmung der Art und Weise (Wie?)."},
+  {d:1,q:"Was bestimmt die Stelle des Praedikats im Hauptsatz?",o:["Es steht immer am Anfang","Es steht immer an der 2. Position","Es steht immer am Ende","Es kann ueberall stehen"],c:1,e:"Im Hauptsatz steht das Praedikat immer an der 2. Stelle (V2-Stellung)."},
+  {d:1,q:"'Der grosse Hund bellt laut.' - Was ist 'Der grosse Hund'?",o:["Praedikat","Subjekt mit Attribut","Akkusativobjekt","Adverbiale"],c:1,e:"'Der grosse Hund' = Subjekt. 'grosse' = Attribut."},
+  {d:1,q:"Was ist ein Attribut?",o:["Ein eigenes Satzglied","Eine Ergaenzung zu einem anderen Satzglied","Das Praedikat","Ein Objekt"],c:1,e:"Attribut = Ergaenzung innerhalb eines Satzglieds: 'das schoene Haus'."},
+  {d:2,q:"Was ist eine adverbiale Bestimmung?",o:["Ein Objekt","Eine Umstandsangabe (wann, wo, wie, warum)","Das Subjekt","Ein Attribut"],c:1,e:"Adverbiale: temporal (wann), lokal (wo), modal (wie), kausal (warum)."},
+  {d:2,q:"'Er schenkt ihr ein Buch.' - Wieviele Objekte?",o:["Keines","Eines","Zwei (ihr + Buch)","Drei"],c:2,e:"Dativobjekt: 'ihr'. Akkusativobjekt: 'ein Buch'. = Zwei Objekte."},
+  {d:2,q:"Welches Satzglied kann man oft weglassen?",o:["Subjekt","Praedikat","Adverbiale Bestimmung","Alle"],c:2,e:"Adverbiale sind meist fakultativ: 'Er laeuft' ist ohne 'schnell' korrekt."},
+  {d:2,q:"Was ist der Unterschied zwischen Objekt und Adverbiale?",o:["Kein Unterschied","Objekt = vom Verb gefordert; Adverbiale = optional","Objekt = Nomen; Adverbiale = Adverb","Gleiches"],c:1,e:"Objekt = Verb verlangt es. Adverbiale = optionale Ergaenzung."},
+  {d:3,q:"Was ist ein Genitivobjekt?",o:["Objekt im Nominativ","Objekt im Genitiv (Sie gedenkt ihrer Mutter)","Objekt im Dativ","Ein Attribut"],c:1,e:"Genitivobjekt: 'gedenken', 'beduerftig sein' + Genitiv."},
+  {d:3,q:"Welche Satzglieder hat 'Er gibt ihr morgen das Buch.'?",o:["Subjekt + Praedikat","Subj. + Praed. + Dat.obj. + Akk.obj.","Subj. + Praed. + Dat.obj. + Akk.obj. + adv. Bestimmung","Alle Satzglieder"],c:2,e:"Er (Subj.) gibt (Praed.) ihr (Dat.) das Buch (Akk.) morgen (adv. temporal) = 5 Glieder."}
+],
+"kommasetzung":[
+  {d:1,q:"Wann steht ein Komma vor 'weil'?",o:["Nie","Immer","Nur bei langen Saetzen","Nur formal"],c:1,e:"Vor subordinierenden Konjunktionen (weil, obwohl, wenn, dass) steht immer Komma."},
+  {d:1,q:"'Ich weiss ___ dass er kommt.' - Komma?",o:["Komma: weiss, dass","Kein Komma","Semikolon","Doppelpunkt"],c:0,e:"Vor 'dass' (Konjunktion) immer Komma."},
+  {d:1,q:"Wovor steht immer ein Komma?",o:["Vor 'und'","Vor 'oder'","Vor subordinierenden Konjunktionen","Vor Adjektiven"],c:2,e:"Vor Nebensatz-Einleitern (weil, obwohl, wenn, dass...) = immer Komma."},
+  {d:1,q:"'Sie sang ___ und ___ er spielte Klavier.' - Komma vor 'und'?",o:["Ja, Komma","Nein, kein Komma","Semikolon","Gedankenstrich"],c:1,e:"Wenn 'und' nur Satzteile (keine vollst. Hauptsaetze) verbindet: kein Komma."},
+  {d:1,q:"'Er isst Aepfel ___ Birnen und Pflaumen.' - Komma?",o:["Aepfel, Birnen und...","Aepfel Birnen und...","Aepfel, Birnen, und...","Aepfel. Birnen und..."],c:0,e:"Aufzaehlung: Komma trennt Glieder, VOR letztem 'und' kein Komma."},
+  {d:1,q:"'Er ___ mein bester Freund ___ kam gestern.' - Satzzeichen?",o:["Keine Kommas","Er, mein bester Freund, kam...","Er (mein bester Freund) kam...","Er - mein bester Freund - kam..."],c:1,e:"Appositionen werden durch Kommas abgetrennt: 'Er, mein bester Freund, kam...'"},
+  {d:2,q:"'Ehrlich gesagt ___ bin ich muede.' - Komma?",o:["Komma: gesagt, bin","Kein Komma","Semikolon","Punkt"],c:0,e:"Eingeschobene Ausdruecke werden durch Komma abgetrennt."},
+  {d:2,q:"Wann werden Infinitivgruppen durch Komma abgetrennt?",o:["Nie","Immer","Bei 'um...zu', 'ohne...zu', 'anstatt...zu'","Nur bei langen Saetzen"],c:2,e:"'Er kam, um mich zu besuchen.' - 'um...zu' wird abgetrennt."},
+  {d:2,q:"'Er kam ___ um mich zu besuchen.' - Komma?",o:["Komma: kam, um","Kein Komma","Semikolon","Gedankenstrich"],c:0,e:"'um...zu + Infinitiv' = Komma davor."},
+  {d:3,q:"Welcher Satz hat FALSCHE Zeichensetzung?",o:["Er kommt, weil er muss.","Er kommt weil, er muss.","Er kommt, obwohl er muede ist.","Er kommt, wenn er Zeit hat."],c:1,e:"'Er kommt weil, er muss.' ist falsch. Komma VOR 'weil': 'Er kommt, weil er muss.'"},
+  {d:3,q:"'Ich fragte ihn ___ ob er kommt.' - Komma?",o:["Komma: ihn, ob","Kein Komma","Semikolon","Doppelpunkt"],c:0,e:"'ob' leitet indirekten Fragesatz ein -> Komma."},
+  {d:3,q:"'Entweder du kommst ___ oder du bleibst zu Hause.' - Komma?",o:["Komma: kommst, oder","Kein Komma","Semikolon","Gedankenstrich"],c:0,e:"'entweder...oder' mit vollst. Hauptsaetzen: Komma vor 'oder'."},
+  {d:3,q:"Wann steht KEIN Komma vor 'und'?",o:["Nie","Wenn 'und' nur Woerter/Satzteile verbindet (keine vollst. HS)","Immer","Bei kurzem Satz"],c:1,e:"'Er isst und trinkt.' - 'und' verbindet Verben, kein Komma noetig."}
 ]
 };
 
@@ -437,13 +700,23 @@ function getDiffClass(d){ return ["d1","d2","d3"][d-1]; }
 
 function pickQuestion(id){
   var p=prog[id], pool=Q[id]||[], diff=getDiff(id);
+  // Strictly pick from current difficulty level
   var cands=pool.filter(function(q){return q.d===diff;});
+  // If no questions at this level, expand to adjacent
+  if(!cands.length) cands=pool.filter(function(q){return Math.abs(q.d-diff)<=1;});
   if(!cands.length) cands=pool;
-  var fresh=cands.filter(function(q){return p.used.indexOf(pool.indexOf(q))===-1;});
-  if(!fresh.length){p.used=[];fresh=cands;}
+  // Avoid recently used questions - track per difficulty
+  var usedKey='used_d'+diff;
+  if(!p[usedKey]) p[usedKey]=[];
+  var usedList=p[usedKey];
+  var fresh=cands.filter(function(q){
+    var idx=pool.indexOf(q);
+    return usedList.indexOf(idx)===-1;
+  });
+  // Reset if all used
+  if(!fresh.length){ p[usedKey]=[]; fresh=cands; }
   var q=fresh[Math.floor(Math.random()*fresh.length)];
-  p.used.push(pool.indexOf(q));
-  if(p.used.length>Math.floor(pool.length*0.6)) p.used.shift();
+  p[usedKey].push(pool.indexOf(q));
   return q;
 }
 
@@ -492,87 +765,20 @@ function updateStats(){
   else sb.style.display='none';
 }
 
-var lastQTexts = [];
-
-async function nextQuestion(){
+function nextQuestion(){
   if(!activeTopic) return;
   answered=false;
-  currentQ=null;
-
-  var p=prog[activeTopic];
-  var pct=getPct(activeTopic);
-  var diff, diffLabel, diffInstr;
-  if(pct < 40){
-    diff=1; diffLabel="Einfach";
-    diffInstr="Erstelle eine EINFACHE Frage (Niveau 5. Klasse). Klare, eindeutige Formulierung. Offensichtliche Fehleroptionen.";
-  } else if(pct < 70){
-    diff=2; diffLabel="Mittel";
-    diffInstr="Erstelle eine MITTELSCHWERE Frage (Niveau 6. Klasse). Etwas kniffligere Optionen, aber noch loesbar.";
-  } else {
-    diff=3; diffLabel="Schwer";
-    diffInstr="Erstelle eine SCHWERE Frage (Gymnasialniveau). Sehr aehnliche Optionen, Ausnahmen und Sonderfaelle. Wirklich herausfordernd.";
-  }
-
-  var topicName = TOPICS.filter(function(t){return t.id===activeTopic;})[0].name;
-  var isLese = activeTopic==="leseverstehen1"||activeTopic==="leseverstehen2";
-
+  currentQ=pickQuestion(activeTopic);
+  var q=currentQ;
+  var diff=getDiff(activeTopic);
   var stars=''; for(var i=0;i<diff;i++) stars+='&#9733;';
-  document.getElementById('q-card').innerHTML=
-    '<div class="q-num">Schwierigkeit: '+stars+' ('+diffLabel+')</div>'+
-    '<div style="text-align:center;padding:2rem;color:var(--muted);">'+
-    '<div style="font-size:28px;margin-bottom:8px;">&#x23F3;</div>Neue Frage wird generiert...</div>';
-
-  var lastList = lastQTexts.slice(-4).join(" | ");
-  var leseExtra = isLese ?
-    "Das Format MUSS sein: Zuerst ein kurzer Lesetext (3-5 Saetze) im Feld \"text\", dann eine Frage dazu." :
-    "Kein Lesetext noetig, nur Frage und Optionen. Das Feld \"text\" bleibt leer (\"\").";
-
-  var prompt = "Du bist ein Schweizer Deutschlehrer fuer Gymivorbereitung (5.-6. Klasse).\n" +
-    "Thema: " + topicName + "\n" +
-    diffInstr + "\n" +
-    leseExtra + "\n" +
-    "Bisher hatte der Schueler " + p.correct + " von " + p.total + " Fragen richtig (" + pct + "%).\n" +
-    "Diese Fragen wurden schon gestellt (NICHT wiederholen): " + (lastList||"keine") + "\n\n" +
-    "Antworte NUR mit diesem JSON-Format, kein Markdown, kein Text davor/danach:\n" +
-    "{\"text\":\"...(Lesetext oder leer)\",\"q\":\"...(Frage)\",\"o\":[\"A\",\"B\",\"C\",\"D\"],\"c\":0,\"e\":\"...(kurze Erklaerung 1-2 Saetze)\"}\n" +
-    "c ist der Index (0-3) der richtigen Antwort. Alle 4 Optionen muessen plausibel sein. Auf Deutsch.";
-
-  try {
-    var res = await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01"},
-      body:JSON.stringify({
-        model:"claude-haiku-4-5-20251001",
-        max_tokens:800,
-        messages:[{role:"user",content:prompt}]
-      })
-    });
-    var data = await res.json();
-    if(!data.content||!data.content[0]) throw new Error("no content");
-    var raw = data.content[0].text.replace(/```json|```/g,"").trim();
-    var q = JSON.parse(raw);
-    q.d = diff;
-    currentQ = q;
-    lastQTexts.push(q.q.substring(0,60));
-    if(lastQTexts.length>10) lastQTexts.shift();
-    renderQuestion(q, stars);
-  } catch(err) {
-    // Fallback: pick from local pool
-    currentQ = pickQuestion(activeTopic);
-    var q2 = currentQ;
-    var stars2=''; for(var i=0;i<q2.d;i++) stars2+='&#9733;';
-    renderQuestion(q2, stars2);
-  }
-}
-
-function renderQuestion(q, stars){
   var ohtml=q.o.map(function(opt,i){
-    return '<button class="opt-btn" onclick="answer('+i+')">'+(["A","B","C","D"][i])+'. '+opt+'</button>';
+    return '<button class="opt-btn" onclick="answer('+i+')">'+(['A','B','C','D'][i])+'. '+opt+'</button>';
   }).join('');
   var textBlock='';
   if(q.text&&q.text.length>5){
-    textBlock='<div style="background:#F0FAF5;border-left:4px solid #1D9E75;border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:16px;font-size:14px;line-height:1.75;color:#1A1A1A;">'+
-      '<div style="font-size:11px;font-weight:600;color:#0F6E56;margin-bottom:8px;letter-spacing:0.5px;">&#x1F4D6; LESETEXT</div>'+
+    textBlock='<div style="background:#F0FAF5;border-left:4px solid #1D9E75;border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:16px;font-size:14px;line-height:1.75;">'+
+      '<div style="font-size:11px;font-weight:600;color:#0F6E56;margin-bottom:6px;">LESETEXT</div>'+
       q.text+'</div>';
   }
   document.getElementById('q-card').innerHTML=
@@ -651,9 +857,6 @@ function loadProgress(username){
   } catch(e){ return false; }
 }
 
-// Global API key - stored in localStorage per device
-var apiKey = localStorage.getItem('gymiv2_apikey') || '';
-
 function checkPassword(){
   var nameInp = document.getElementById('pw-name');
   var pwInp   = document.getElementById('pw-input');
@@ -707,46 +910,6 @@ document.getElementById('pw-input').addEventListener('keydown',function(e){
 document.getElementById('pw-name').addEventListener('keydown',function(e){
   if(e.key==='Enter') document.getElementById('pw-input').focus();
 });
-
-function showApiModal(){
-  var modal = document.getElementById('api-modal');
-  document.getElementById('api-key-input').value = apiKey || '';
-  document.getElementById('api-status').textContent = '';
-  document.getElementById('api-status').className = 'api-status';
-  modal.classList.add('open');
-}
-function closeApiModal(){
-  document.getElementById('api-modal').classList.remove('open');
-}
-async function saveApiKey(){
-  var key = document.getElementById('api-key-input').value.trim();
-  var status = document.getElementById('api-status');
-  if(!key.startsWith('sk-ant-') && key.length > 0){
-    status.textContent = 'Sieht nicht wie ein Anthropic Key aus (muss mit sk-ant- beginnen).';
-    status.className = 'api-status nok'; return;
-  }
-  if(!key){ apiKey=''; localStorage.removeItem('gymiv2_apikey');
-    status.textContent = 'Key geloescht. Fallback-Fragen werden benutzt.';
-    status.className = 'api-status ok'; return;
-  }
-  status.textContent = 'Wird geprueft...'; status.className = 'api-status';
-  try {
-    var res = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:10,messages:[{role:'user',content:'Hi'}]})
-    });
-    if(res.status===200||res.status===400){
-      apiKey=key; localStorage.setItem('gymiv2_apikey',key);
-      status.textContent = 'Key gespeichert! KI-Fragen sind jetzt aktiv.';
-      status.className = 'api-status ok';
-      setTimeout(closeApiModal, 1500);
-    } else {
-      status.textContent = 'Ungültiger Key (Fehler '+res.status+').';
-      status.className = 'api-status nok';
-    }
-  } catch(e){ status.textContent='Verbindungsfehler.'; status.className='api-status nok'; }
-}
 
 function logout(){
   if(!confirm('Wirklich abmelden? Dein Fortschritt ist gespeichert.')) return;
